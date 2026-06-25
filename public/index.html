@@ -1864,75 +1864,74 @@
                     </defs>
 
                     <!--
-                        Serpentine path:
-                        Start:  960, 200   (top center — below headline)
-                        Bend 1: 1500, 1000 (far right)
-                        Bend 2: 400,  1900 (far left)
-                        Bend 3: 1500, 2800 (far right again)
+                        Clean non-crossing S-curve:
+                        Start:  960, 0     (drum bottom — top of this section)
+                        Bend R: 1680, 900  (far right)
+                        Bend L: 240,  1800 (far left)
+                        Bend R: 1680, 2700 (far right)
                         End:    960,  3600 (bottom center)
                     -->
 
                     <!-- Wide diffuse aura -->
-                    <path d="M 960 200
-                             C 960 500, 1700 700, 1500 1000
-                             C 1300 1300, 400 1500, 400 1900
-                             C 400 2300, 1700 2500, 1500 2800
-                             C 1300 3100, 960 3300, 960 3600"
+                    <path d="M 960 0
+                             C 960 300,  1800 500,  1680 900
+                             C 1560 1300, 240 1400,  240  1800
+                             C 240  2200, 1800 2400, 1680 2700
+                             C 1560 3000, 960  3300,  960  3600"
                         fill="none" stroke="rgba(157,78,221,0.07)" stroke-width="40"
                         stroke-linecap="round" filter="url(#cable-aura)" />
 
                     <!-- Main cable -->
                     <path id="cable-main-path"
-                        d="M 960 200
-                           C 960 500, 1700 700, 1500 1000
-                           C 1300 1300, 400 1500, 400 1900
-                           C 400 2300, 1700 2500, 1500 2800
-                           C 1300 3100, 960 3300, 960 3600"
+                        d="M 960 0
+                           C 960 300,  1800 500,  1680 900
+                           C 1560 1300, 240 1400,  240  1800
+                           C 240  2200, 1800 2400, 1680 2700
+                           C 1560 3000, 960  3300,  960  3600"
                         fill="none" stroke="url(#cable-outer)" stroke-width="4"
                         stroke-linecap="round" filter="url(#cable-glow)" />
 
                     <!-- Sheen highlight -->
-                    <path d="M 960 200
-                             C 960 500, 1700 700, 1500 1000
-                             C 1300 1300, 400 1500, 400 1900
-                             C 400 2300, 1700 2500, 1500 2800
-                             C 1300 3100, 960 3300, 960 3600"
+                    <path d="M 960 0
+                             C 960 300,  1800 500,  1680 900
+                             C 1560 1300, 240 1400,  240  1800
+                             C 240  2200, 1800 2400, 1680 2700
+                             C 1560 3000, 960  3300,  960  3600"
                         fill="none" stroke="url(#cable-sheen)" stroke-width="1.5"
                         stroke-linecap="round" opacity="0.7" />
 
                     <!-- Gold pulse animation -->
-                    <path d="M 960 200
-                             C 960 500, 1700 700, 1500 1000
-                             C 1300 1300, 400 1500, 400 1900
-                             C 400 2300, 1700 2500, 1500 2800
-                             C 1300 3100, 960 3300, 960 3600"
+                    <path d="M 960 0
+                             C 960 300,  1800 500,  1680 900
+                             C 1560 1300, 240 1400,  240  1800
+                             C 240  2200, 1800 2400, 1680 2700
+                             C 1560 3000, 960  3300,  960  3600"
                         fill="none" stroke="rgba(255,210,80,0.9)" stroke-width="1.2"
                         stroke-linecap="round" stroke-dasharray="80 600"
                         style="animation: pulse-flow 5s linear infinite;" />
 
-                    <!-- Node dot at bend 1 (right) -->
-                    <circle cx="1500" cy="1000" r="9" fill="#9d4edd" stroke="rgba(255,200,80,0.9)" stroke-width="2.5" filter="url(#node-glow)"/>
-                    <circle cx="1500" cy="1000" r="3.5" fill="#ffd060"/>
+                    <!-- Node dot at bend 1 (right, 25%) -->
+                    <circle cx="1680" cy="900" r="9" fill="#9d4edd" stroke="rgba(255,200,80,0.9)" stroke-width="2.5" filter="url(#node-glow)"/>
+                    <circle cx="1680" cy="900" r="3.5" fill="#ffd060"/>
 
-                    <!-- Node dot at bend 2 (left) -->
-                    <circle cx="400" cy="1900" r="9" fill="#9d4edd" stroke="rgba(255,200,80,0.9)" stroke-width="2.5" filter="url(#node-glow)"/>
-                    <circle cx="400" cy="1900" r="3.5" fill="#ffd060"/>
+                    <!-- Node dot at bend 2 (left, 50%) -->
+                    <circle cx="240" cy="1800" r="9" fill="#9d4edd" stroke="rgba(255,200,80,0.9)" stroke-width="2.5" filter="url(#node-glow)"/>
+                    <circle cx="240" cy="1800" r="3.5" fill="#ffd060"/>
 
-                    <!-- Node dot at bend 3 (right) -->
-                    <circle cx="1500" cy="2800" r="9" fill="#9d4edd" stroke="rgba(255,200,80,0.9)" stroke-width="2.5" filter="url(#node-glow)"/>
-                    <circle cx="1500" cy="2800" r="3.5" fill="#ffd060"/>
+                    <!-- Node dot at bend 3 (right, 75%) -->
+                    <circle cx="1680" cy="2700" r="9" fill="#9d4edd" stroke="rgba(255,200,80,0.9)" stroke-width="2.5" filter="url(#node-glow)"/>
+                    <circle cx="1680" cy="2700" r="3.5" fill="#ffd060"/>
                 </svg>
 
                 <!--
-                    Text nodes sit ABOVE each bend peak.
-                    Positions are in % of section height, horizontally near the bend extremes.
-                    Bend 1 (right)  ≈ 28% height, 78% left
-                    Bend 2 (left)   ≈ 53% height, 21% left
-                    Bend 3 (right)  ≈ 78% height, 78% left
+                    Text nodes aligned to actual path bends:
+                    Bend 1 (right) ≈ 25% height → text on RIGHT side
+                    Bend 2 (left)  ≈ 50% height → text on LEFT side
+                    Bend 3 (right) ≈ 75% height → text on RIGHT side
                 -->
 
-                <!-- Text Node 1 — BETWEEN start and bend 1 (~14% height, right side) -->
-                <div class="cable-text-node" style="left: 72%; top: 14%; transform: translate(-50%, -100%); pointer-events: auto;">
+                <!-- Text Node 1 — RIGHT bend (~25% height) — Соцсети -->
+                <div class="cable-text-node" style="right: 4%; left: auto; top: 25%; transform: translateY(-100%); pointer-events: auto;">
                     <span class="cable-text-label">Соцсети</span>
                     <div class="cable-social-row">
                         <a href="https://instagram.com" target="_blank" class="cable-social-btn" aria-label="Instagram">
@@ -1947,14 +1946,14 @@
                     </div>
                 </div>
 
-                <!-- Text Node 2 — BETWEEN bend 1 and bend 2 (~38% height, left side) -->
-                <div class="cable-text-node" style="left: 25%; top: 38%; transform: translate(-50%, -100%); pointer-events: auto;">
+                <!-- Text Node 2 — LEFT bend (~50% height) — Написать нам -->
+                <div class="cable-text-node" style="left: 2%; top: 50%; transform: translateY(-100%); pointer-events: auto;">
                     <span class="cable-text-label">Написать нам</span>
                     <a href="mailto:org@grandbookingofficial.ru" class="cable-text-value">org@grandbookingofficial.ru</a>
                 </div>
 
-                <!-- Text Node 3 — BETWEEN bend 2 and bend 3 (~62% height, right side) -->
-                <div class="cable-text-node" style="left: 72%; top: 62%; transform: translate(-50%, -100%); pointer-events: auto;">
+                <!-- Text Node 3 — RIGHT bend (~75% height) — Позвонить нам -->
+                <div class="cable-text-node" style="right: 4%; left: auto; top: 75%; transform: translateY(-100%); pointer-events: auto;">
                     <span class="cable-text-label">Позвонить нам</span>
                     <a href="tel:+74994505062" class="cable-text-value">+7 499 450 50 62</a>
                 </div>
