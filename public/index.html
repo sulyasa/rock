@@ -1,0 +1,2872 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRAND BOOKING | Концертное агентство</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Three.js & GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #060608;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-purple: #9d4edd;
+            --accent-purple-glow: rgba(157, 78, 221, 0.4);
+            --accent-gold: #ff9e00;
+            --accent-gold-glow: rgba(255, 158, 0, 0.4);
+            --font-outfit: 'Outfit', sans-serif;
+            --font-inter: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: var(--font-inter);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* 3D Canvas Background Container */
+        .canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 5;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Continuous Background Glowing Wire - ONLY for contacts section */
+        /* Site-wide wire removed; contacts section has its own cable */
+        .wire-svg-container {
+            display: none; /* hidden globally */
+        }
+
+        /* Guitar to Microphone Cable */
+        .guitar-cable-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 750vh;
+            pointer-events: none;
+            z-index: 6;
+            overflow: visible;
+        }
+        
+        .guitar-cable-container svg {
+            overflow: visible;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .guitar-cable-container path {
+            transition: stroke-width 0.2s ease;
+        }
+
+        @keyframes pulse-flow {
+            0% { stroke-dashoffset: 3000; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        /* Header Navigation */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(6, 6, 8, 0.6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-logo-icon {
+            width: 36px;
+            height: 36px;
+            fill: var(--accent-gold);
+            filter: drop-shadow(0 0 5px var(--accent-gold-glow));
+        }
+
+        .header-logo-text {
+            font-family: var(--font-outfit);
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 30%, #a8a29e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-tagline {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent-gold);
+            border-left: 2px solid rgba(255, 255, 255, 0.15);
+            padding-left: 0.75rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-light);
+        }
+
+        /* Layout & Scrolling sections */
+        .scroll-wrapper {
+            position: relative;
+            z-index: 10;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 0 10%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .slide-content {
+            max-width: 600px;
+            z-index: 15;
+            position: relative;
+        }
+
+        .slide-title {
+            font-family: var(--font-outfit);
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 40%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .slide-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        /* Glowing Inline Highlights */
+        .highlight-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(157, 78, 221, 0.1);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-family: var(--font-outfit);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-light);
+            box-shadow: 0 0 15px var(--accent-purple-glow);
+            backdrop-filter: blur(5px);
+        }
+
+        .highlight-badge svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--accent-gold);
+            filter: drop-shadow(0 0 3px var(--accent-gold-glow));
+        }
+
+        /* Specific Slide Designs */
+        /* Slide 1 - Hero */
+        .hero-guitar-wrapper {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        .hero-guitar-svg {
+            height: 90%;
+            fill: none;
+            stroke: var(--text-light);
+            stroke-width: 1.5px;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.2));
+        }
+
+        .hero-stage {
+            overflow: hidden;
+            align-items: stretch;
+            padding: 0 6vw;
+            background:
+                radial-gradient(circle at 18% 30%, rgba(157, 78, 221, 0.2), transparent 30%),
+                radial-gradient(circle at 78% 22%, rgba(255, 158, 0, 0.18), transparent 28%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 45%);
+        }
+
+        .hero-stage::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(130deg, rgba(255, 255, 255, 0.045), transparent 20%),
+                radial-gradient(circle at center, transparent 45%, rgba(0, 0, 0, 0.32) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-copy {
+            max-width: 620px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 1.2rem;
+            padding-top: 7rem;
+            padding-bottom: 5rem;
+            z-index: 16;
+        }
+
+        .hero-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            width: fit-content;
+            padding: 0.7rem 1rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(8, 8, 12, 0.68);
+            box-shadow: 0 0 0 1px rgba(255, 158, 0, 0.08), 0 18px 48px rgba(0, 0, 0, 0.34);
+            backdrop-filter: blur(10px);
+            color: var(--accent-gold);
+            font-size: 0.88rem;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .hero-kicker-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            box-shadow: 0 0 12px var(--accent-gold-glow);
+            flex: 0 0 auto;
+        }
+
+        .hero-title {
+            margin: 0;
+            font-family: var(--font-outfit);
+            font-size: clamp(3.8rem, 8vw, 7.4rem);
+            font-weight: 900;
+            line-height: 0.92;
+            letter-spacing: -0.06em;
+            text-transform: uppercase;
+            text-wrap: balance;
+            background: linear-gradient(135deg, #ffffff 25%, #dbd7d0 62%, #8b8b93 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-lead {
+            margin: 0;
+            max-width: 540px;
+            font-size: 1.08rem;
+            line-height: 1.75;
+            color: rgba(248, 250, 252, 0.76);
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+            color: rgba(248, 250, 252, 0.78);
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+        }
+
+        .hero-meta span {
+            position: relative;
+        }
+
+        .hero-meta span:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: -0.8rem;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-50%);
+        }
+
+        .hero-artboard {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 12;
+        }
+
+        .hero-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(36px);
+            opacity: 0.65;
+            animation: heroGlowPulse 5.5s ease-in-out infinite;
+        }
+
+        .hero-glow.one {
+            width: 340px;
+            height: 340px;
+            right: 10%;
+            top: 16%;
+            background: rgba(255, 158, 0, 0.18);
+        }
+
+        .hero-glow.two {
+            width: 260px;
+            height: 260px;
+            left: 18%;
+            bottom: 14%;
+            background: rgba(157, 78, 221, 0.18);
+            animation-delay: -2s;
+        }
+
+
+
+        .hero-guitar-svg {
+            position: absolute;
+            right: -8%;
+            bottom: -18%;      /* Shifted lower to position the guitar and text beautifully */
+            width: min(52vw, 900px);
+            height: auto;
+            opacity: 0.95;
+            filter: drop-shadow(0 0 30px rgba(255, 158, 0, 0.25)) drop-shadow(0 10px 40px rgba(0, 0, 0, 0.6));
+            transform-origin: 50% 50%;
+            animation: vectorGuitarFloat 7s ease-in-out infinite;
+            z-index: 13;
+            display: block;
+        }
+
+        @keyframes vectorGuitarFloat {
+            0%, 100% { transform: rotate(45deg) translateY(0); }
+            50% { transform: rotate(47deg) translateY(-15px); }
+        }
+
+        .hero-stat {
+            position: absolute;
+            left: 47%;
+            bottom: 19%;
+            max-width: 260px;
+            opacity: 0;
+            z-index: 14;
+        }
+
+        .hero-floor-label {
+            position: absolute;
+            right: 6%;
+            bottom: 3.5rem;
+            z-index: 14;
+            color: rgba(248, 250, 252, 0.72);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+        }
+
+        @keyframes heroFloat {
+            0%, 100% { transform: rotate(-18deg) translateY(0); }
+            50% { transform: rotate(-16deg) translateY(-14px); }
+        }
+
+        @keyframes heroMicSwing {
+            0%, 100% { transform: translateX(-8%) rotate(24deg) translateY(0); }
+            50% { transform: translateX(-6%) rotate(18deg) translateY(-10px); }
+        }
+
+        @keyframes heroGlowPulse {
+            0%, 100% { transform: scale(0.94); opacity: 0.54; }
+            50% { transform: scale(1.08); opacity: 0.82; }
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 600;
+            z-index: 20;
+        }
+
+        .scroll-indicator-mouse {
+            width: 20px;
+            height: 35px;
+            border: 2px solid var(--text-muted);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .scroll-indicator-wheel {
+            width: 4px;
+            height: 8px;
+            background-color: var(--accent-gold);
+            border-radius: 2px;
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scroll-wheel 1.5s infinite;
+        }
+
+        @keyframes scroll-wheel {
+            0% { top: 6px; opacity: 1; }
+            100% { top: 18px; opacity: 0; }
+        }
+
+        /* Slide 6 - Team Drum */
+        .team-slide {
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* The big drum — 96% page width, more face-on for viewer */
+        .drum-stage {
+            position: relative;
+            width: 96vw;
+            max-width: 1700px;
+            margin: 0 auto;
+            flex-shrink: 0;
+        }
+
+        /* Top half of drum (polaroids live here) */
+        .drum-top-half {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            padding-top: 4rem;   /* push polaroids UP — higher inside drum circle */
+            min-height: auto;
+            z-index: 10;
+        }
+
+        /* Drum rim SVG - surrounds both halves */
+        .drum-rim-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Bottom half of drum - slogan + logo */
+        .drum-bottom-half {
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            margin-top: 3.5rem;   /* push logo and slogan lower */
+            z-index: 10;
+            border-top: none;
+            background: transparent;
+        }
+
+        .polaroids-wrapper {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        /* Polaroid Frame CSS with premium micro-interaction */
+        .polaroid-card {
+            background: #ffffff;
+            padding: 10px;
+            padding-bottom: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            width: 140px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            color: #08080a;
+        }
+
+        .polaroid-photo {
+            background: #111115;
+            width: 100%;
+            height: 120px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: #1e1e24;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .polaroid-photo::after {
+            content: '?';
+            font-family: var(--font-outfit);
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        .polaroid-caption {
+            font-family: var(--font-inter);
+            font-weight: 700;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .polaroid-subcaption {
+            font-family: var(--font-inter);
+            font-weight: 500;
+            color: #555;
+            margin-top: 2px;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        /* Polaroid Arching & Tilted Angles */
+        .polaroid-card:nth-child(1) { transform: translateY(25px) rotate(-10deg); }
+        .polaroid-card:nth-child(2) { transform: translateY(8px) rotate(-5deg); }
+        .polaroid-card:nth-child(3) { transform: translateY(0px) rotate(0deg); }
+        .polaroid-card:nth-child(4) { transform: translateY(8px) rotate(5deg); }
+        .polaroid-card:nth-child(5) { transform: translateY(25px) rotate(10deg); }
+
+        .polaroid-card:hover {
+            transform: scale(1.2) rotate(0deg) translateY(-20px) !important;
+            box-shadow: 0 25px 45px rgba(157, 78, 221, 0.5);
+            z-index: 100;
+        }
+
+        .drum-slogan {
+            font-family: var(--font-outfit);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 2.5rem;   /* push slogan DOWN — lower inside drum */
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+        }
+
+        /* Drum stage styled for a circular top-down drum — no border outline */
+        .drum-stage {
+            position: relative;
+            width: 96vw;
+            max-width: 1200px;
+            height: 1200px;
+            margin: 0 auto;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent;
+            overflow: visible;
+        }
+
+        /* Large Stats Badges for Slide 3, 4, 5 */
+        .stats-badge-large {
+            display: flex;
+            align-items: center;
+            gap: 2.25rem;
+            background: rgba(18, 18, 24, 0.85);
+            border: 1px solid rgba(157, 78, 221, 0.25);
+            padding: 2rem 3rem;
+            border-radius: 28px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 30px rgba(157, 78, 221, 0.08);
+            backdrop-filter: blur(15px);
+            max-width: 580px;
+            width: 100%;
+            transition: all 0.3s ease;
+            border-left: 5px solid var(--accent-gold);
+        }
+        .stats-badge-large:hover {
+            border-color: var(--accent-gold);
+            box-shadow: 0 20px 50px rgba(157, 78, 221, 0.2);
+            transform: translateY(-5px);
+        }
+        .stats-badge-large svg {
+            width: 75px;
+            height: 75px;
+            fill: var(--accent-gold);
+            stroke: var(--accent-gold);
+            filter: drop-shadow(0 0 8px var(--accent-gold-glow));
+            flex-shrink: 0;
+        }
+        .stats-text-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+        .stats-number {
+            font-family: var(--font-outfit);
+            font-size: 3.8rem;
+            font-weight: 800;
+            line-height: 0.95;
+            background: linear-gradient(135deg, #ffffff 40%, var(--accent-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.4rem;
+        }
+        .stats-label {
+            font-size: 1.05rem;
+            font-weight: 550;
+            color: var(--text-light);
+            line-height: 1.35;
+        }
+
+        /* Slide 7 - Contacts Cable Section — vertical wire from drum, tall section */
+        .contact-cable-section {
+            position: relative;
+            width: 100%;
+            min-height: 180vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            overflow: hidden;
+            padding: 0;
+            margin-top: -60px; /* overlap with drum section for seamless wire */
+        }
+
+        /* Cable inline text labels (above the wire, not floating cards) */
+        .cable-text-node {
+            position: absolute;
+            z-index: 10;
+            pointer-events: auto;
+            text-align: center;
+        }
+        .cable-text-node .cable-text-label {
+            font-family: var(--font-outfit);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--accent-gold);
+            margin-bottom: 0.35rem;
+            display: block;
+        }
+        .cable-text-node .cable-text-value {
+            font-family: var(--font-outfit);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.25s;
+            display: block;
+        }
+        .cable-text-node .cable-text-value:hover { color: var(--accent-purple); }
+        .cable-text-node .cable-social-row {
+            display: flex;
+            gap: 0.9rem;
+            justify-content: center;
+            margin-top: 0.4rem;
+        }
+
+        /* Cable SVG container */
+        .cable-svg-wrap {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Contact nodes floating along the cable */
+        .cable-node {
+            position: absolute;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        /* Node label cards */
+        .cable-label {
+            background: rgba(12, 10, 20, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            padding: 1.4rem 2rem;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 30px rgba(157,78,221,0.08);
+            transition: all 0.3s ease;
+            min-width: 220px;
+            text-align: center;
+        }
+        .cable-label:hover {
+            border-color: rgba(255,200,80,0.3);
+            box-shadow: 0 12px 45px rgba(0,0,0,0.7), 0 0 35px rgba(255,158,0,0.12);
+            transform: translateY(-4px);
+        }
+
+        .cable-label-title {
+            font-family: var(--font-outfit);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent-gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .cable-label-value {
+            font-family: var(--font-outfit);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .cable-label-value:hover { color: var(--accent-purple); }
+
+        /* Social row inside cable node */
+        .cable-social-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 0.25rem;
+        }
+        .cable-social-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+            text-decoration: none;
+        }
+        .cable-social-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+        .cable-social-btn:hover {
+            transform: scale(1.18) translateY(-4px);
+            color: var(--accent-gold);
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 18px var(--accent-gold-glow);
+        }
+
+        /* Big headline in contacts */
+        .contacts-headline {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
+        }
+        .contacts-headline h2 {
+            font-family: var(--font-outfit);
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 40%, rgba(255,200,80,0.9) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap;
+        }
+
+        .social-icons-row {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2.5rem 0;
+        }
+
+        .social-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+        }
+
+        .social-btn svg {
+            width: 26px;
+            height: 26px;
+            fill: currentColor;
+        }
+
+        .social-btn:hover {
+            transform: scale(1.15) translateY(-5px);
+            color: var(--accent-gold);
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 20px var(--accent-gold-glow);
+            background: rgba(255, 158, 0, 0.05);
+        }
+
+        .contact-info-block {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .contact-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-value {
+            font-family: var(--font-outfit);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .contact-value:hover {
+            color: var(--accent-purple);
+        }
+
+        /* Responsiveness and Mobile Adaptations */
+        @media (max-width: 968px) {
+            .slide {
+                padding: 0 5%;
+                flex-direction: column;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .slide-content {
+                max-width: 100%;
+                margin-bottom: 4rem;
+            }
+
+            .slide-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-guitar-wrapper {
+                display: none;
+            }
+
+            .hero-stage {
+                min-height: 100svh;
+                padding: 0 5%;
+                justify-content: center;
+                text-align: left;
+            }
+
+            .hero-copy {
+                padding-top: 6.5rem;
+                padding-bottom: 10rem;
+                gap: 1rem;
+            }
+
+            .hero-title {
+                font-size: clamp(3rem, 14vw, 4.8rem);
+            }
+
+            .hero-lead {
+                font-size: 0.98rem;
+                line-height: 1.65;
+            }
+
+            .hero-meta {
+                gap: 0.9rem;
+                font-size: 0.72rem;
+                letter-spacing: 0.14em;
+            }
+
+            .hero-meta span:not(:last-child)::after {
+                right: -0.52rem;
+            }
+
+            .hero-curve {
+                width: 86vw;
+                right: -6%;
+                top: 12%;
+                opacity: 0.72;
+            }
+
+            .hero-guitar-image {
+                width: 80vw;
+                right: -20%;
+                bottom: 3%;
+                opacity: 0.82;
+            }
+
+            .hero-microphone-hero {
+                width: 34vw;
+                left: 68%;
+                bottom: 12%;
+            }
+
+            .hero-stat {
+                left: 6%;
+                right: 6%;
+                bottom: 18%;
+                max-width: none;
+            }
+
+            .hero-floor-label {
+                left: 5%;
+                right: auto;
+                bottom: 4.8rem;
+                font-size: 0.66rem;
+                letter-spacing: 0.2em;
+            }
+
+            .polaroids-wrapper {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .polaroid-card {
+                width: 130px;
+                padding: 8px;
+            }
+
+            .polaroid-photo {
+                height: 110px;
+            }
+
+            .contact-card {
+                padding: 2rem;
+            }
+
+            .contact-value {
+                font-size: 1.4rem;
+            }
+        }
+
+        /* --- Interactive Animation Overlays --- */
+        .interactive-overlay-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 8;
+        }
+
+        .overlay-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .overlay-image {
+            pointer-events: none;
+            mix-blend-mode: screen;
+            filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.12));
+            transform-origin: center center;
+            will-change: transform, opacity;
+        }
+
+        /* Drumstick text labels — positioned ABOVE and parallel to the stick via JS */
+        .stick-text-label {
+            position: absolute;
+            /* JS will set left/top/transform based on stick angle & size */
+            pointer-events: none;
+            opacity: 0;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            white-space: nowrap;
+            background: rgba(18, 18, 24, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 5px solid var(--accent-purple);
+            padding: 1.25rem 2rem;
+            border-radius: 16px;
+            box-shadow: 0 16px 36px rgba(0,0,0,0.65), 0 0 18px rgba(157,78,221,0.08);
+            backdrop-filter: blur(12px);
+            max-width: 400px;
+            width: auto;
+            text-align: left;
+            /* Text rotates with the stick so it's always parallel */
+            transform-origin: left center;
+        }
+
+        #drumstick-label-8 {
+            border-left: 5px solid var(--accent-gold);
+            box-shadow: 0 16px 36px rgba(0,0,0,0.65), 0 0 18px rgba(255,158,0,0.08);
+        }
+
+        .stick-text-num {
+            font-family: var(--font-outfit);
+            font-size: 3.8rem;
+            line-height: 1;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+            background: linear-gradient(135deg, #ffffff 40%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #drumstick-label-8 .stick-text-num {
+            background: linear-gradient(135deg, #ffffff 40%, var(--accent-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stick-text-desc {
+            font-family: var(--font-outfit);
+            font-size: 1.15rem;
+            line-height: 1.35;
+            color: rgba(255,255,255,0.75);
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* Glassmorphic Stats Labels on Overlays (for microphone) */
+        .glass-label {
+            position: absolute;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            column-gap: 1rem;
+            background: linear-gradient(135deg, rgba(18, 18, 24, 0.92), rgba(18, 18, 24, 0.78));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 4px solid var(--accent-gold);
+            padding: 1rem 1.35rem 1rem 1.15rem;
+            border-radius: 22px;
+            box-shadow: 0 18px 36px rgba(0,0,0,0.52), 0 0 20px rgba(255,158,0,0.05);
+            backdrop-filter: blur(12px);
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            max-width: 360px;
+            z-index: 12;
+            transition: border-color 0.3s;
+        }
+
+        .glass-label-number {
+            font-family: var(--font-outfit);
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, #ffffff 40%, var(--accent-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+
+        .glass-label-text {
+            font-size: 0.96rem;
+            font-weight: 600;
+            color: var(--text-light);
+            line-height: 1.32;
+            max-width: 200px;
+        }
+
+        /* Specifically positioned glass labels */
+        #microphone-label {
+            top: 56%;
+            left: 61%;
+            transform: translate(-8%, -50%);
+        }
+
+        /* Active drum hit vibration class */
+        .drum-vibrate {
+            animation: drum-shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes drum-shake {
+            10%, 90% { transform: translate3d(-1px, 2px, 0) rotate(0.3deg); }
+            20%, 80% { transform: translate3d(2px, -2px, 0) rotate(-0.3deg); }
+            30%, 50%, 70% { transform: translate3d(-3px, 3px, 0) rotate(0.6deg); }
+            40%, 60% { transform: translate3d(3px, -1px, 0) rotate(-0.6deg); }
+        }
+
+        /* Sound Ripple Waves */
+        .ripple-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            pointer-events: none;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .ripple-wave {
+            position: absolute;
+            border: 2px solid var(--accent-gold);
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            opacity: 0;
+            transform: scale(0.5);
+            box-shadow: 0 0 20px var(--accent-gold-glow);
+        }
+
+        .ripple-active {
+            animation: ripple-out 1.0s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes ripple-out {
+            0% {
+                width: 200px;
+                height: 200px;
+                opacity: 0.9;
+                transform: scale(0.5);
+                border-color: var(--accent-gold);
+            }
+            50% {
+                border-color: var(--accent-purple);
+                box-shadow: 0 0 35px var(--accent-purple-glow);
+            }
+            100% {
+                width: 1200px;
+                height: 1200px;
+                opacity: 0;
+                transform: scale(1.2);
+            }
+        }
+
+        @media (max-width: 968px) {
+            .glass-label {
+                left: 50% !important;
+                transform: translateX(-50%) translateY(0) !important;
+                width: 90%;
+                max-width: 320px;
+                grid-template-columns: 1fr;
+                row-gap: 0.45rem;
+                text-align: center;
+            }
+            .glass-label-text {
+                max-width: none;
+            }
+            #microphone-label { top: 70%; }
+            .stick-text-label {
+                left: 50% !important;
+                top: 25% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 90%;
+                max-width: 320px;
+                text-align: center;
+                align-items: center;
+            }
+            .overlay-image {
+                max-height: 45vh;
+            }
+            .drum-stage {
+                width: 95vw;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas Background -->
+    <div class="canvas-container" id="canvas-container">
+        <canvas id="webgl-canvas"></canvas>
+    </div>
+
+    <!-- Fixed Overlay Container for 2D Interactive Elements -->
+    <div class="interactive-overlay-container">
+        <!-- Microphone overlay wrapper -->
+        <div id="overlay-microphone-wrapper" class="overlay-wrapper">
+            <svg id="overlay-microphone" class="overlay-image" viewBox="0 0 300 500" style="opacity: 0; transform: scale(0.6) rotate(45deg); position: absolute; max-height: 80vh; width: min(42vw, 550px); height: auto; pointer-events: none;">
+                <defs>
+                    <linearGradient id="mic-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ffe49e" />
+                        <stop offset="50%" stop-color="#ff9e00" />
+                        <stop offset="100%" stop-color="#b86200" />
+                    </linearGradient>
+                    <linearGradient id="mic-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f3d5ff" />
+                        <stop offset="50%" stop-color="#9d4edd" />
+                        <stop offset="100%" stop-color="#5a189a" />
+                    </linearGradient>
+                    <linearGradient id="mic-body" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#1e1b4b" />
+                        <stop offset="50%" stop-color="#0f172a" />
+                        <stop offset="100%" stop-color="#020617" />
+                    </linearGradient>
+                    <radialGradient id="grille-shading" cx="50%" cy="40%" r="50%">
+                        <stop offset="0%" stop-color="rgba(255, 228, 158, 0.25)" />
+                        <stop offset="70%" stop-color="rgba(157, 78, 221, 0.05)" />
+                        <stop offset="100%" stop-color="rgba(15, 23, 42, 0.95)" />
+                    </radialGradient>
+                    <filter id="mic-glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="6" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                <!-- Handle: tapered from top (width 50) to bottom (width 32) -->
+                <path d="M 125 240 L 175 240 L 164 430 L 136 430 Z" fill="url(#mic-body)" stroke="url(#mic-gold)" stroke-width="3.5" filter="url(#mic-glow)" />
+                <!-- Handle inner accent lines (guitar style) -->
+                <line x1="140" y1="260" x2="146" y2="410" stroke="url(#mic-purple)" stroke-width="1.5" opacity="0.7" />
+                <line x1="160" y1="260" x2="154" y2="410" stroke="url(#mic-purple)" stroke-width="1.5" opacity="0.7" />
+                <line x1="150" y1="250" x2="150" y2="420" stroke="url(#mic-gold)" stroke-width="1" opacity="0.5" stroke-dasharray="8 4" />
+
+                <!-- XLR Boot/Connector at the bottom -->
+                <path d="M 136 430 L 164 430 L 160 465 L 140 465 Z" fill="rgba(15, 23, 42, 0.9)" stroke="url(#mic-purple)" stroke-width="3" />
+                <rect x="143" y="465" width="14" height="25" rx="3" fill="url(#mic-gold)" opacity="0.9" />
+
+                <!-- Cable entry point marker -->
+                <circle id="mic-cable-entry" cx="150" cy="490" r="1" fill="none" />
+
+                <!-- Collar / Connection Ring between handle and grille -->
+                <rect x="120" y="215" width="60" height="25" rx="4" fill="url(#mic-body)" stroke="url(#mic-gold)" stroke-width="3" filter="url(#mic-glow)" />
+                <!-- Collar accent band -->
+                <rect x="123" y="224" width="54" height="7" fill="url(#mic-purple)" opacity="0.8" />
+
+                <!-- Perfectly rounded grille dome (hemisphere) -->
+                <path d="M 110 215 A 40 40 0 0 1 190 215 Z" fill="url(#grille-shading)" stroke="url(#mic-gold)" stroke-width="4.5" filter="url(#mic-glow)" />
+                
+                <!-- Grille inner mesh lines (perfectly rounded arches) -->
+                <!-- Horizontal concentric arcs -->
+                <path d="M 113 200 A 37 32 0 0 1 187 200" fill="none" stroke="url(#mic-purple)" stroke-width="1.5" opacity="0.75" />
+                <path d="M 120 188 A 30 24 0 0 1 180 188" fill="none" stroke="url(#mic-purple)" stroke-width="1.5" opacity="0.75" />
+                
+                <!-- Vertical rounded arches (quadratic Beziers) -->
+                <path d="M 120 215 Q 150 178 180 215" fill="none" stroke="url(#mic-gold)" stroke-width="1.5" opacity="0.6" />
+                <path d="M 132 215 Q 150 176 168 215" fill="none" stroke="url(#mic-gold)" stroke-width="1.5" opacity="0.6" />
+                <path d="M 142 215 Q 150 175 158 215" fill="none" stroke="url(#mic-gold)" stroke-width="1.5" opacity="0.6" />
+            </svg>
+            <div id="microphone-label" class="glass-label">
+                <div class="glass-label-number">50+</div>
+                <div class="glass-label-text">артистов в активной работе агентства</div>
+            </div>
+        </div>
+
+        <!-- Drumstick overlay wrapper -->
+        <!-- Stick: 75vw wide, pivot at right edge center, tip points left, initially at 65deg -->
+        <div id="overlay-drumstick-wrapper" class="overlay-wrapper" style="opacity: 0; left: auto; right: 0; width: 100vw; height: 100vh; pointer-events: none;">
+            <!-- Premium drumstick SVG. Pivot (butt end) anchored at right-center, tip points left -->
+            <svg id="overlay-drumstick" viewBox="0 0 700 120"
+                style="position: absolute; right: -2vw; top: 50%; width: 80vw; max-width: 1450px; height: auto;
+                       transform-origin: 97% 50%; transform: rotate(65deg);
+                       filter: drop-shadow(0 0 28px rgba(255,158,0,0.6)) drop-shadow(0 6px 16px rgba(0,0,0,0.85));">
+                <defs>
+                    <!-- Main wood gradient: pale tip → golden maple → dark butt -->
+                    <linearGradient id="wood-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#fff8e7" />
+                        <stop offset="12%" stop-color="#fde9a0" />
+                        <stop offset="30%" stop-color="#e8a030" />
+                        <stop offset="55%" stop-color="#c06010" />
+                        <stop offset="80%" stop-color="#904010" />
+                        <stop offset="100%" stop-color="#5a2508" />
+                    </linearGradient>
+                    <!-- Highlight sheen -->
+                    <linearGradient id="sheen-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="rgba(255,255,255,0.6)" />
+                        <stop offset="35%" stop-color="rgba(255,255,255,0.18)" />
+                        <stop offset="100%" stop-color="rgba(255,255,255,0.04)" />
+                    </linearGradient>
+                    <!-- Grip tape -->
+                    <linearGradient id="grip-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#120820" />
+                        <stop offset="50%" stop-color="#2e0c50" />
+                        <stop offset="100%" stop-color="#120820" />
+                    </linearGradient>
+                    <!-- Shadow -->
+                    <filter id="stick-shadow" x="-5%" y="-60%" width="110%" height="220%">
+                        <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="rgba(0,0,0,0.85)" />
+                    </filter>
+                    <!-- Tip glow -->
+                    <filter id="tip-glow" x="-100%" y="-100%" width="300%" height="300%">
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <!-- Chrome ring gradient -->
+                    <linearGradient id="chrome-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#e0e0e8" />
+                        <stop offset="40%" stop-color="#ffffff" />
+                        <stop offset="70%" stop-color="#b0b0b8" />
+                        <stop offset="100%" stop-color="#707080" />
+                    </linearGradient>
+                </defs>
+
+                <!-- === MAIN SHAFT: butt top=22, butt bot=98; shoulder top=55, shoulder bot=65 === -->
+                <polygon
+                    points="660,22 660,98 130,65 130,55"
+                    fill="url(#wood-grad)"
+                    filter="url(#stick-shadow)"
+                />
+
+                <!-- Wood grain lines (subtle longitudinal) -->
+                <line x1="145" y1="57" x2="640" y2="27" stroke="rgba(255,230,160,0.11)" stroke-width="2" />
+                <line x1="145" y1="60" x2="640" y2="35" stroke="rgba(255,230,160,0.07)" stroke-width="1.5" />
+                <line x1="145" y1="63" x2="640" y2="72" stroke="rgba(60,20,0,0.09)" stroke-width="1.5" />
+                <line x1="145" y1="62" x2="640" y2="83" stroke="rgba(60,20,0,0.06)" stroke-width="1.2" />
+                <!-- Subtle mid-grain shadow (center of shaft) -->
+                <line x1="200" y1="60" x2="620" y2="54" stroke="rgba(90,35,5,0.12)" stroke-width="3" />
+
+                <!-- Top sheen highlight streak -->
+                <polygon
+                    points="660,22 660,32 130,56 130,55"
+                    fill="url(#sheen-grad)"
+                    opacity="0.8"
+                />
+
+                <!-- === BUTT CAP (rounded end, right side) === -->
+                <ellipse cx="668" cy="60" rx="17" ry="28"
+                    fill="url(#wood-grad)"
+                    stroke="rgba(100,45,5,0.6)" stroke-width="1.5"
+                    filter="url(#stick-shadow)"
+                />
+                <!-- Butt cap highlight ring -->
+                <ellipse cx="666" cy="52" rx="10" ry="10"
+                    fill="none"
+                    stroke="rgba(255,245,210,0.35)" stroke-width="2"
+                />
+
+                <!-- === CHROME END RING (separates grip from shaft) === -->
+                <polygon points="535,28 552,27 552,93 535,94" fill="url(#chrome-grad)" />
+                <line x1="543" y1="27.5" x2="543" y2="93.5" stroke="rgba(255,255,255,0.5)" stroke-width="1" />
+
+                <!-- === GRIP ZONE (3 wrap bands with diagonal purple tape) === -->
+                <!-- Band 1 -->
+                <polygon points="558,26.5 578,26 578,94 558,94.5" fill="url(#grip-grad)" opacity="0.95" />
+                <line x1="558" y1="26.5" x2="578" y2="94" stroke="rgba(157,78,221,0.55)" stroke-width="2" />
+                <line x1="564" y1="26.5" x2="584" y2="94" stroke="rgba(157,78,221,0.28)" stroke-width="1.5" />
+                <!-- Band 2 -->
+                <polygon points="590,25.5 610,25 610,95 590,95.5" fill="url(#grip-grad)" opacity="0.95" />
+                <line x1="590" y1="25.5" x2="610" y2="95" stroke="rgba(157,78,221,0.55)" stroke-width="2" />
+                <line x1="596" y1="25.5" x2="616" y2="95" stroke="rgba(157,78,221,0.28)" stroke-width="1.5" />
+                <!-- Band 3 -->
+                <polygon points="622,24.5 642,24 642,96 622,96.5" fill="url(#grip-grad)" opacity="0.95" />
+                <line x1="622" y1="24.5" x2="642" y2="96" stroke="rgba(157,78,221,0.55)" stroke-width="2" />
+                <line x1="628" y1="24.5" x2="648" y2="96" stroke="rgba(157,78,221,0.28)" stroke-width="1.5" />
+                <!-- Chrome separator ring (other side of grip) -->
+                <polygon points="646,24 658,23 658,97 646,97" fill="url(#chrome-grad)" opacity="0.9" />
+
+                <!-- === NECK/SHOULDER (taper shaft → bead) === -->
+                <polygon
+                    points="130,55 130,65 42,63 42,57"
+                    fill="url(#wood-grad)"
+                    stroke="rgba(80,30,0,0.3)" stroke-width="0.5"
+                />
+                <!-- Neck highlight -->
+                <polygon points="130,55 130,58 42,58 42,57" fill="rgba(255,240,200,0.28)" />
+
+                <!-- === TIP BEAD (large nylon/acorn bead) === -->
+                <path d="M 42,57 C 36,54 18,49 11,60 C 18,71 36,66 42,63 Z"
+                    fill="url(#wood-grad)"
+                    stroke="rgba(255,210,90,0.8)" stroke-width="1.8"
+                    filter="url(#tip-glow)"
+                />
+                <!-- Bead highlight spot -->
+                <ellipse cx="24" cy="57" rx="7" ry="4"
+                    fill="rgba(255,252,230,0.5)"
+                />
+                <!-- Bead outer glow ring -->
+                <ellipse cx="24" cy="60" rx="14" ry="9"
+                    fill="none"
+                    stroke="rgba(255,200,80,0.4)" stroke-width="4"
+                    filter="url(#tip-glow)"
+                />
+            </svg>
+
+            <!-- Stat label 1 ("10 o'clock" pause) -->
+            <div id="drumstick-label-10" class="stick-text-label">
+                <div class="stick-text-num">100+</div>
+                <div class="stick-text-desc">мероприятий за плечами</div>
+            </div>
+
+            <!-- Stat label 2 ("8 o'clock" pause) -->
+            <div id="drumstick-label-8" class="stick-text-label">
+                <div class="stick-text-num">20+ лет</div>
+                <div class="stick-text-desc">опыта команды в концертах</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Winding Glowing Wire/Cable -->
+    <div class="wire-svg-container">
+        <svg width="100%" height="100%" preserveAspectRatio="none">
+            <!-- Background base thick wire -->
+            <path id="wire-path-base" class="wire-path-bg" d=""></path>
+            <!-- Glowing stroke wire overlay -->
+            <path id="wire-path-glow" class="wire-path-glow" d=""></path>
+            <!-- Pulse dot overlay -->
+            <path id="wire-path-pulse" class="wire-pulse" d=""></path>
+        </svg>
+    </div>
+
+
+
+    <!-- Scroll Sections -->
+    <div class="scroll-wrapper">
+
+        <!-- Guitar-to-Microphone Glowing Winding Cable -->
+        <div class="guitar-cable-container">
+            <svg id="guitar-cable-svg" width="100%" height="100%">
+                <defs>
+                    <linearGradient id="cable-gold" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#b86200" />
+                        <stop offset="30%" stop-color="#ff9e00" />
+                        <stop offset="50%" stop-color="#ffe49e" />
+                        <stop offset="70%" stop-color="#ff9e00" />
+                        <stop offset="100%" stop-color="#b86200" />
+                    </linearGradient>
+                    <linearGradient id="cable-purple" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#5a189a" />
+                        <stop offset="50%" stop-color="#9d4edd" />
+                        <stop offset="100%" stop-color="#5a189a" />
+                    </linearGradient>
+                    <filter id="cable-glow-filter" x="-200%" y="-200%" width="500%" height="500%">
+                        <feGaussianBlur stdDeviation="8" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                    <filter id="cable-aura-filter" x="-300%" y="-300%" width="700%" height="700%">
+                        <feGaussianBlur stdDeviation="25" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <!-- Aura Path -->
+                <path id="guitar-cable-aura" d="" fill="none" stroke="rgba(157,78,221,0.08)" stroke-width="36" stroke-linecap="round" filter="url(#cable-aura-filter)" />
+                <!-- Main Outer Path (Purple) -->
+                <path id="guitar-cable-outer" d="" fill="none" stroke="url(#cable-purple)" stroke-width="5.5" stroke-linecap="round" filter="url(#cable-glow-filter)" />
+                <!-- Inner Glowing Core Path (Gold) -->
+                <path id="guitar-cable-inner" d="" fill="none" stroke="url(#cable-gold)" stroke-width="2" stroke-linecap="round" />
+                <!-- Light/Pulse overlay -->
+                <path id="guitar-cable-pulse" d="" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="120 800" style="animation: pulse-flow 4s linear infinite;" opacity="0.9" />
+            </svg>
+        </div>
+
+        <!-- Slide 1 - Hero -->
+        <section class="slide hero-stage" id="hero" style="overflow: visible;">
+            <div class="slide-content hero-copy">
+                <div class="hero-kicker hero-kicker-chip">
+                    <span class="hero-kicker-dot"></span>
+                    Живые концерты и туры
+                </div>
+                <h1 class="hero-title">Grand Booking</h1>
+                <p class="slide-description" style="font-size: 1.15rem; font-weight: 600; letter-spacing: 0.16em; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 0;">
+                    Концертное агентство полного цикла
+                </p>
+            </div>
+
+            <div class="hero-artboard">
+                <div class="hero-glow one"></div>
+                <div class="hero-glow two"></div>
+                <!-- Styled Custom Vector Guitar (Teardrop pick shape, rounded base, no curves, 45-deg right tilt) -->
+                <svg class="hero-guitar-svg hero-guitar-asset" viewBox="0 0 600 1000" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="guitar-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffe49e" />
+                            <stop offset="50%" stop-color="#ff9e00" />
+                            <stop offset="100%" stop-color="#b86200" />
+                        </linearGradient>
+                        <linearGradient id="guitar-purple-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f3d5ff" />
+                            <stop offset="50%" stop-color="#9d4edd" />
+                            <stop offset="100%" stop-color="#5a189a" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Text Paths for Logo wrapping the guitar shoulder (bottom-left to top-right direction to prevent upside-down text) -->
+                    <!-- Path for "GRAND BOOKING" (outer) -->
+                    <path id="logo-path-outer" d="M 45 780 C 45 570, 165 395, 205 355" fill="none" stroke="none" />
+                    <!-- Path for "КОНЦЕРТНОЕ АГЕНТСТВО" (inner) -->
+                    <path id="logo-path-inner" d="M 80 780 C 80 580, 200 420, 235 380" fill="none" stroke="none" />
+
+                    <!-- Vector Logo Text curved along the paths, centered and right-side up -->
+                    <text fill="url(#guitar-gold-grad)" font-family="'Outfit', sans-serif" font-weight="900" font-size="34" letter-spacing="3" text-anchor="middle">
+                        <textPath href="#logo-path-outer" startOffset="50%">GRAND BOOKING</textPath>
+                    </text>
+                    <text fill="#ffffff" font-family="'Inter', sans-serif" font-weight="600" font-size="15" letter-spacing="5.5" opacity="0.85" text-anchor="middle">
+                        <textPath href="#logo-path-inner" startOffset="50%">КОНЦЕРТНОЕ АГЕНТСТВО</textPath>
+                    </text>
+
+                    <!-- Body: Teardrop/Pick shape tapers narrow at neck, wide rounded base, no waist curves -->
+                    <path d="M 270 420 C 240 450, 120 600, 120 780 C 120 900, 200 960, 300 960 C 400 960, 480 900, 480 780 C 480 600, 360 450, 330 420 Z" 
+                          stroke="url(#guitar-gold-grad)" stroke-width="4.5" fill="rgba(15, 23, 42, 0.45)" />
+
+                    <!-- Inner Body Accent Border -->
+                    <path d="M 276 435 C 250 460, 140 600, 140 775 C 140 880, 210 940, 300 940 C 390 940, 460 880, 460 775 C 460 600, 350 460, 324 435 Z" 
+                          stroke="url(#guitar-purple-grad)" stroke-width="2" fill="none" opacity="0.65" />
+
+                    <!-- Soundhole (Double Ring) -->
+                    <circle cx="300" cy="620" r="55" stroke="url(#guitar-gold-grad)" stroke-width="4" fill="none" />
+                    <circle cx="300" cy="620" r="45" stroke="url(#guitar-purple-grad)" stroke-width="2.5" fill="none" />
+                    <!-- Soundhole Inner Depth -->
+                    <circle id="guitar-soundhole-center" cx="300" cy="620" r="44" fill="rgba(6, 6, 8, 0.8)" />
+
+                    <!-- Bridge -->
+                    <rect x="230" y="790" width="140" height="16" rx="4" fill="rgba(6, 6, 8, 0.9)" stroke="url(#guitar-gold-grad)" stroke-width="3" />
+                    <!-- Bridge pins -->
+                    <circle cx="250" cy="798" r="2.5" fill="#ffe49e" />
+                    <circle cx="270" cy="798" r="2.5" fill="#ffe49e" />
+                    <circle cx="290" cy="798" r="2.5" fill="#ffe49e" />
+                    <circle cx="310" cy="798" r="2.5" fill="#ffe49e" />
+                    <circle cx="330" cy="798" r="2.5" fill="#ffe49e" />
+                    <circle cx="350" cy="798" r="2.5" fill="#ffe49e" />
+
+                    <!-- Neck / Fretboard -->
+                    <rect x="282" y="150" width="36" height="270" fill="rgba(6, 6, 8, 0.7)" stroke="url(#guitar-purple-grad)" stroke-width="2.5" />
+
+                    <!-- Frets -->
+                    <line x1="282" y1="175" x2="318" y2="175" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <line x1="282" y1="200" x2="318" y2="200" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <line x1="282" y1="225" x2="318" y2="225" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <line x1="282" y1="250" x2="318" y2="250" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <line x1="282" y1="275" x2="318" y2="275" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <line x1="282" y1="300" x2="318" y2="300" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <line x1="282" y1="325" x2="318" y2="325" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <line x1="282" y1="350" x2="318" y2="350" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <line x1="282" y1="375" x2="318" y2="375" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <line x1="282" y1="400" x2="318" y2="400" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+
+                    <!-- Fret Markers (Dots) -->
+                    <circle cx="300" cy="212.5" r="3" fill="#ffe49e" />
+                    <circle cx="300" cy="262.5" r="3" fill="#ffe49e" />
+                    <circle cx="300" cy="312.5" r="3" fill="#ffe49e" />
+                    <circle cx="294" cy="362.5" r="3" fill="#ffe49e" />
+                    <circle cx="306" cy="362.5" r="3" fill="#ffe49e" /> <!-- Double dot at 12th fret -->
+
+                    <!-- Headstock -->
+                    <path d="M 282 150 L 268 135 L 268 45 L 300 25 L 332 45 L 332 135 L 318 150 Z" 
+                          stroke="url(#guitar-gold-grad)" stroke-width="3.5" fill="rgba(6, 6, 8, 0.9)" />
+                    <!-- Headstock Center Cutout for Classical look -->
+                    <rect x="278" y="55" width="16" height="65" rx="3" stroke="url(#guitar-purple-grad)" stroke-width="1.5" fill="none" opacity="0.6" />
+                    <rect x="306" y="55" width="16" height="65" rx="3" stroke="url(#guitar-purple-grad)" stroke-width="1.5" fill="none" opacity="0.6" />
+
+                    <!-- Tuning Pegs (Left Side) -->
+                    <line x1="268" y1="60" x2="250" y2="60" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <circle cx="250" cy="60" r="6" stroke="url(#guitar-gold-grad)" stroke-width="2" fill="none" />
+                    <line x1="268" y1="90" x2="250" y2="90" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <circle cx="250" cy="90" r="6" stroke="url(#guitar-gold-grad)" stroke-width="2" fill="none" />
+                    <line x1="268" y1="120" x2="250" y2="120" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <circle cx="250" cy="120" r="6" stroke="url(#guitar-gold-grad)" stroke-width="2" fill="none" />
+
+                    <!-- Tuning Pegs (Right Side) -->
+                    <line x1="332" y1="60" x2="350" y2="60" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <circle cx="350" cy="60" r="6" stroke="url(#guitar-gold-grad)" stroke-width="2" fill="none" />
+                    <line x1="332" y1="90" x2="350" y2="90" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <circle cx="350" cy="90" r="6" stroke="url(#guitar-gold-grad)" stroke-width="2" fill="none" />
+                    <line x1="332" y1="120" x2="350" y2="120" stroke="url(#guitar-purple-grad)" stroke-width="2" />
+                    <circle cx="350" cy="120" r="6" stroke="url(#guitar-gold-grad)" stroke-width="2" fill="none" />
+
+                    <!-- Guitar Strings -->
+                    <line x1="285" y1="790" x2="285" y2="50" stroke="rgba(255, 255, 255, 0.45)" stroke-width="1.1" />
+                    <line x1="291" y1="790" x2="291" y2="50" stroke="rgba(255, 255, 255, 0.45)" stroke-width="1.1" />
+                    <line x1="297" y1="790" x2="297" y2="50" stroke="rgba(255, 255, 255, 0.45)" stroke-width="1.3" />
+                    <line x1="303" y1="790" x2="303" y2="50" stroke="rgba(255, 255, 255, 0.45)" stroke-width="1.3" />
+                    <line x1="309" y1="790" x2="309" y2="50" stroke="rgba(255, 255, 255, 0.45)" stroke-width="1.1" />
+                    <line x1="315" y1="790" x2="315" y2="50" stroke="rgba(255, 255, 255, 0.45)" stroke-width="1.1" />
+
+                    <!-- Output Jack and Plug at the bottom of the body (300, 960) -->
+                    <!-- Jack Plate -->
+                    <ellipse cx="300" cy="960" rx="18" ry="7" fill="rgba(6, 6, 8, 0.9)" stroke="url(#guitar-gold-grad)" stroke-width="2" />
+                    <!-- Jack Hole -->
+                    <circle cx="300" cy="960" r="5" fill="#120820" stroke="url(#guitar-purple-grad)" stroke-width="1.5" />
+                    <!-- Metal Plug (Jack Connector) inserted into the jack -->
+                    <!-- Plug Body -->
+                    <rect x="296" y="960" width="8" height="22" rx="2" fill="url(#guitar-gold-grad)" />
+                    <!-- Plug Boot (rubber sleeve) -->
+                    <rect x="294" y="978" width="12" height="15" rx="3" fill="rgba(6, 6, 8, 0.9)" stroke="url(#guitar-purple-grad)" stroke-width="1.5" />
+                    
+                    <!-- Cable outlet tracker element -->
+                    <circle id="guitar-cable-outlet" cx="300" cy="990" r="1" fill="none" />
+                </svg>
+                <div class="hero-floor-label hero-floor-copy">Live booking / concert agency</div>
+            </div>
+
+            <div class="scroll-indicator">
+                <span>Прокрутите</span>
+                <div class="scroll-indicator-mouse">
+                    <div class="scroll-indicator-wheel"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2 - Concerts in Russia -->
+        <section class="slide" id="concerts">
+            <div class="slide-content" style="margin-left: auto; text-align: right;">
+                <h2 class="slide-title">МАСШТАБНЫЕ КОНЦЕРТЫ</h2>
+                <p class="slide-description">
+                    Организация зарубежных гастролей и концертов легендарных рок-исполнителей в России под ключ. Полная логистика, промо и технический райдер.
+                </p>
+                <div class="highlight-badge">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+                    <span>КОНЦЕРТЫ ЗАРУБЕЖНЫХ АРТИСТОВ В РФ</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mediator Showcase — dedicated 400vh zone: pick animates here, NO content -->
+        <section id="mediator-showcase" style="height: 400vh; position: relative; pointer-events: none;"></section>
+
+        <!-- Slide 3 - Microphone Showcase -->
+        <section class="slide" id="microphone-showcase" style="height: 150vh; position: relative; pointer-events: none;"></section>
+
+        <!-- Slide 4 - Drumstick Showcase -->
+        <section class="slide" id="drumstick-showcase" style="height: 250vh; position: relative; pointer-events: none;"></section>
+
+        <!-- Slide 5 - Team Drum -->
+        <section class="slide team-slide" id="team" style="height: 200vh; position: relative; justify-content: center; align-items: center; padding-top: 8vh;">
+            <h2 class="slide-title" id="team-title" style="font-size: 2.8rem; margin-bottom: 1.5rem; opacity: 0; transform: translateY(-30px);">Наша команда</h2>
+
+            <!-- 88%-wide Drum Stage -->
+            <div class="drum-stage" id="drum-wrapper">
+
+                <!-- Drum rim decorative SVG — more face-on (viewer sees the beating surface) -->
+                <!-- viewBox 1000x500: deeper body, rim ellipse ry=110 for strong perspective angle -->
+                <!-- Drum SVG — ry=140: top surface fully face-on to viewer -->
+                <svg id="team-drum-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"
+                    style="position: absolute; top:50%; left:50%; width:100%; height:100%; transform: translate(-50%, -50%); z-index:1; opacity:0; pointer-events:none;">
+                    <defs>
+                        <linearGradient id="drum-metal-h" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#3a2000" />
+                            <stop offset="30%" stop-color="#c87020" />
+                            <stop offset="50%" stop-color="#ffd060" />
+                            <stop offset="70%" stop-color="#c87020" />
+                            <stop offset="100%" stop-color="#3a2000" />
+                        </linearGradient>
+                        <radialGradient id="drum-head-radial" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="rgba(255,252,225,0.18)" />
+                            <stop offset="70%" stop-color="rgba(255,240,180,0.06)" />
+                            <stop offset="95%" stop-color="rgba(180,140,40,0.02)" />
+                            <stop offset="100%" stop-color="rgba(10,10,14,0.85)" />
+                        </radialGradient>
+                        <filter id="rim-glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="6" result="blur" />
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                        <filter id="head-glow" x="-10%" y="-10%" width="120%" height="120%">
+                            <feGaussianBlur stdDeviation="10" result="blur" />
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+
+                    <!-- Outer hoop/rim -->
+                    <circle cx="500" cy="500" r="480" fill="none" stroke="url(#drum-metal-h)" stroke-width="16" filter="url(#rim-glow)"/>
+                    <circle cx="500" cy="500" r="471" fill="none" stroke="#222" stroke-width="4"/>
+
+                    <!-- Drum head playing surface -->
+                    <circle cx="500" cy="500" r="468" fill="url(#drum-head-radial)" filter="url(#head-glow)"/>
+
+                    <!-- Lugs around the circular rim -->
+                    <g transform="translate(500, 500)">
+                        <g transform="rotate(0) translate(0, -480)"><rect x="-15" y="-12" width="30" height="24" rx="4" fill="#ffd060" stroke="#c07020" stroke-width="2" filter="url(#rim-glow)"/><circle cx="0" cy="0" r="5" fill="#fff"/></g>
+                        <g transform="rotate(45) translate(0, -480)"><rect x="-15" y="-12" width="30" height="24" rx="4" fill="#ffd060" stroke="#c07020" stroke-width="2" filter="url(#rim-glow)"/><circle cx="0" cy="0" r="5" fill="#fff"/></g>
+                        <g transform="rotate(90) translate(0, -480)"><rect x="-15" y="-12" width="30" height="24" rx="4" fill="#ffd060" stroke="#c07020" stroke-width="2" filter="url(#rim-glow)"/><circle cx="0" cy="0" r="5" fill="#fff"/></g>
+                        <g transform="rotate(135) translate(0, -480)"><rect x="-15" y="-12" width="30" height="24" rx="4" fill="#ffd060" stroke="#c07020" stroke-width="2" filter="url(#rim-glow)"/><circle cx="0" cy="0" r="5" fill="#fff"/></g>
+                        <g transform="rotate(180) translate(0, -480)"><rect x="-15" y="-12" width="30" height="24" rx="4" fill="#ffd060" stroke="#c07020" stroke-width="2" filter="url(#rim-glow)"/><circle cx="0" cy="0" r="5" fill="#fff"/></g>
+                        <g transform="rotate(225) translate(0, -480)"><rect x="-15" y="-12" width="30" height="24" rx="4" fill="#ffd060" stroke="#c07020" stroke-width="2" filter="url(#rim-glow)"/><circle cx="0" cy="0" r="5" fill="#fff"/></g>
+                        <g transform="rotate(270) translate(0, -480)"><rect x="-15" y="-12" width="30" height="24" rx="4" fill="#ffd060" stroke="#c07020" stroke-width="2" filter="url(#rim-glow)"/><circle cx="0" cy="0" r="5" fill="#fff"/></g>
+                        <g transform="rotate(315) translate(0, -480)"><rect x="-15" y="-12" width="30" height="24" rx="4" fill="#ffd060" stroke="#c07020" stroke-width="2" filter="url(#rim-glow)"/><circle cx="0" cy="0" r="5" fill="#fff"/></g>
+                    </g>
+                </svg>
+
+                <!-- Ripple waves (on drum head) -->
+                <div class="ripple-container" style="top: 0;">
+                    <div class="ripple-wave" id="drum-ripple-1"></div>
+                    <div class="ripple-wave" id="drum-ripple-2"></div>
+                </div>
+
+                <!-- TOP HALF: Polaroid photos -->
+                <div class="drum-top-half">
+                    <div class="polaroids-wrapper" id="team-polaroids">
+                        <!-- Polaroid Card 1 -->
+                        <div class="polaroid-card" style="opacity: 0; transform: scale(0.2) rotate(-30deg);">
+                            <div class="polaroid-photo"></div>
+                            <div class="polaroid-caption">Уля</div>
+                            <div class="polaroid-subcaption">AD</div>
+                        </div>
+                        <!-- Polaroid Card 2 -->
+                        <div class="polaroid-card" style="opacity: 0; transform: scale(0.2) rotate(-20deg);">
+                            <div class="polaroid-photo"></div>
+                            <div class="polaroid-caption">Григорий</div>
+                            <div class="polaroid-subcaption">sales</div>
+                        </div>
+                        <!-- Polaroid Card 3 -->
+                        <div class="polaroid-card" style="opacity: 0; transform: scale(0.2) rotate(0deg);">
+                            <div class="polaroid-photo"></div>
+                            <div class="polaroid-caption">Элия</div>
+                            <div class="polaroid-subcaption">CEO + booking</div>
+                        </div>
+                        <!-- Polaroid Card 4 -->
+                        <div class="polaroid-card" style="opacity: 0; transform: scale(0.2) rotate(20deg);">
+                            <div class="polaroid-photo"></div>
+                            <div class="polaroid-caption">София</div>
+                            <div class="polaroid-subcaption">PR</div>
+                        </div>
+                        <!-- Polaroid Card 5 -->
+                        <div class="polaroid-card" style="opacity: 0; transform: scale(0.2) rotate(30deg);">
+                            <div class="polaroid-photo"></div>
+                            <div class="polaroid-caption">Аня</div>
+                            <div class="polaroid-subcaption">SMM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM HALF: Slogan + Logo -->
+                <div class="drum-bottom-half" id="team-slogan" style="opacity: 0; transform: translateY(20px);">
+                    <div class="header-logo-text" style="font-size: 2.4rem; display: inline-block; filter: drop-shadow(0 0 10px rgba(255,200,80,0.15)); color: #fff;">GRAND BOOKING</div>
+                    <div class="drum-slogan">Мы создаём воспоминания</div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Slide 7 - Contacts: Vertical serpentine cable top→right→left→bottom -->
+        <section class="contact-cable-section" id="contacts" style="height: 200vh;">
+
+            <!-- Headline above the wire -->
+            <div class="contacts-headline" style="top: 3%;">
+                <h2>Остались вопросы?</h2>
+            </div>
+
+            <!-- Full-height cable wrapper anchored to section top -->
+            <div class="contacts-cable-wrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
+                
+                <!-- Serpentine cable SVG: starts top-center, goes right, then left, then center -->
+                <!-- viewBox matches 1920×3600 to cover full section height -->
+                <svg class="cable-svg-wrap" viewBox="0 0 1920 3600" preserveAspectRatio="none" id="contact-cable-svg"
+                    style="position: absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1;">
+                    <defs>
+                        <linearGradient id="cable-outer" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#1c1030" />
+                            <stop offset="30%" stop-color="#3a1860" />
+                            <stop offset="52%" stop-color="#a855f7" />
+                            <stop offset="75%" stop-color="#3a1860" />
+                            <stop offset="100%" stop-color="#1c1030" />
+                        </linearGradient>
+                        <linearGradient id="cable-sheen" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="rgba(230,200,255,0.6)" />
+                            <stop offset="35%" stop-color="rgba(230,200,255,0.2)" />
+                            <stop offset="100%" stop-color="rgba(230,200,255,0.0)" />
+                        </linearGradient>
+                        <filter id="cable-glow" x="-150%" y="-5%" width="400%" height="110%">
+                            <feGaussianBlur stdDeviation="7" result="blur" />
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                        <filter id="cable-aura" x="-300%" y="-20%" width="700%" height="140%">
+                            <feGaussianBlur stdDeviation="22" result="blur" />
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                        <filter id="node-glow" x="-120%" y="-120%" width="340%" height="340%">
+                            <feGaussianBlur stdDeviation="6" result="blur" />
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+
+                    <!--
+                        Serpentine path:
+                        Start:  960, 200   (top center — below headline)
+                        Bend 1: 1500, 1000 (far right)
+                        Bend 2: 400,  1900 (far left)
+                        Bend 3: 1500, 2800 (far right again)
+                        End:    960,  3600 (bottom center)
+                    -->
+
+                    <!-- Wide diffuse aura -->
+                    <path d="M 960 200
+                             C 960 500, 1700 700, 1500 1000
+                             C 1300 1300, 400 1500, 400 1900
+                             C 400 2300, 1700 2500, 1500 2800
+                             C 1300 3100, 960 3300, 960 3600"
+                        fill="none" stroke="rgba(157,78,221,0.07)" stroke-width="40"
+                        stroke-linecap="round" filter="url(#cable-aura)" />
+
+                    <!-- Main cable -->
+                    <path id="cable-main-path"
+                        d="M 960 200
+                           C 960 500, 1700 700, 1500 1000
+                           C 1300 1300, 400 1500, 400 1900
+                           C 400 2300, 1700 2500, 1500 2800
+                           C 1300 3100, 960 3300, 960 3600"
+                        fill="none" stroke="url(#cable-outer)" stroke-width="4"
+                        stroke-linecap="round" filter="url(#cable-glow)" />
+
+                    <!-- Sheen highlight -->
+                    <path d="M 960 200
+                             C 960 500, 1700 700, 1500 1000
+                             C 1300 1300, 400 1500, 400 1900
+                             C 400 2300, 1700 2500, 1500 2800
+                             C 1300 3100, 960 3300, 960 3600"
+                        fill="none" stroke="url(#cable-sheen)" stroke-width="1.5"
+                        stroke-linecap="round" opacity="0.7" />
+
+                    <!-- Gold pulse animation -->
+                    <path d="M 960 200
+                             C 960 500, 1700 700, 1500 1000
+                             C 1300 1300, 400 1500, 400 1900
+                             C 400 2300, 1700 2500, 1500 2800
+                             C 1300 3100, 960 3300, 960 3600"
+                        fill="none" stroke="rgba(255,210,80,0.9)" stroke-width="1.2"
+                        stroke-linecap="round" stroke-dasharray="80 600"
+                        style="animation: pulse-flow 5s linear infinite;" />
+
+                    <!-- Node dot at bend 1 (right) -->
+                    <circle cx="1500" cy="1000" r="9" fill="#9d4edd" stroke="rgba(255,200,80,0.9)" stroke-width="2.5" filter="url(#node-glow)"/>
+                    <circle cx="1500" cy="1000" r="3.5" fill="#ffd060"/>
+
+                    <!-- Node dot at bend 2 (left) -->
+                    <circle cx="400" cy="1900" r="9" fill="#9d4edd" stroke="rgba(255,200,80,0.9)" stroke-width="2.5" filter="url(#node-glow)"/>
+                    <circle cx="400" cy="1900" r="3.5" fill="#ffd060"/>
+
+                    <!-- Node dot at bend 3 (right) -->
+                    <circle cx="1500" cy="2800" r="9" fill="#9d4edd" stroke="rgba(255,200,80,0.9)" stroke-width="2.5" filter="url(#node-glow)"/>
+                    <circle cx="1500" cy="2800" r="3.5" fill="#ffd060"/>
+                </svg>
+
+                <!--
+                    Text nodes sit ABOVE each bend peak.
+                    Positions are in % of section height, horizontally near the bend extremes.
+                    Bend 1 (right)  ≈ 28% height, 78% left
+                    Bend 2 (left)   ≈ 53% height, 21% left
+                    Bend 3 (right)  ≈ 78% height, 78% left
+                -->
+
+                <!-- Text Node 1 — BETWEEN start and bend 1 (~14% height, right side) -->
+                <div class="cable-text-node" style="left: 72%; top: 14%; transform: translate(-50%, -100%); pointer-events: auto;">
+                    <span class="cable-text-label">Соцсети</span>
+                    <div class="cable-social-row">
+                        <a href="https://instagram.com" target="_blank" class="cable-social-btn" aria-label="Instagram">
+                            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                        </a>
+                        <a href="https://vk.com" target="_blank" class="cable-social-btn" aria-label="ВКонтакте">
+                            <svg viewBox="0 0 24 24"><path d="M11.701 18.771H13.36s.511-.056.773-.337c.242-.261.234-.75.234-.75s-.033-2.294 1.032-2.633c1.05-.332 2.398 2.218 3.828 3.197.945.644 1.798.531 1.798.531H23s2.755-.17 1.449-2.336c-.107-.177-.761-1.6-3.915-4.527-3.302-3.07-2.859-2.574.745-7.886C22.994 2.366 23.878 0 23.878 0H17.89L17.896.022 17.876.003h-5.9l-.004.003.003.007c-.012.007-2.337.009-2.336.005L9.636 0H3.649c-.012 0-.003 0-.003.001 0 0-1.099.034-1.671.538-.565.499-.47 1.385-.47 1.385s2.312 7.24 3.981 8.888c.003.002.004.005.007.007.148.143.286.264.415.367.568.445 1.131.445 1.131.445s.463.051.68-.185c.234-.255.225-.763.225-.763s-.044-3.163 1.427-3.628c1.449-.458 3.309 3.067 5.278 4.419 1.423.978 2.508.742 2.508.742l-7.46.097s-.416.025-.416.359c0 .329.278.439.278.439s1.793.765 2.741 1.121c.876.327 1.738.448 1.738.448z"/></svg>
+                        </a>
+                        <a href="https://t.me" target="_blank" class="cable-social-btn" aria-label="Telegram">
+                            <svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Text Node 2 — BETWEEN bend 1 and bend 2 (~38% height, left side) -->
+                <div class="cable-text-node" style="left: 25%; top: 38%; transform: translate(-50%, -100%); pointer-events: auto;">
+                    <span class="cable-text-label">Написать нам</span>
+                    <a href="mailto:org@grandbookingofficial.ru" class="cable-text-value">org@grandbookingofficial.ru</a>
+                </div>
+
+                <!-- Text Node 3 — BETWEEN bend 2 and bend 3 (~62% height, right side) -->
+                <div class="cable-text-node" style="left: 72%; top: 62%; transform: translate(-50%, -100%); pointer-events: auto;">
+                    <span class="cable-text-label">Позвонить нам</span>
+                    <a href="tel:+74994505062" class="cable-text-value">+7 499 450 50 62</a>
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+
+    <!-- Debug Overlay (Hidden for Production) -->
+    <div id="debug-overlay" style="position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.95); color: #00ff00; border: 1px solid #00ff00; padding: 15px; z-index: 99999; font-family: monospace; font-size: 11px; max-height: 250px; width: 450px; overflow-y: auto; pointer-events: none; border-radius: 8px; box-shadow: 0 0 20px rgba(0,255,0,0.3); display: none;">
+        <h4 style="margin-bottom: 8px; color: #ff9e00; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">SYSTEM DEBUG LOG</h4>
+        <div id="debug-logs"></div>
+    </div>
+
+    <!-- JS Implementation -->
+    <script>
+        const debugLogs = document.getElementById('debug-logs');
+        function logDebug(msg, type = 'info') {
+            const color = type === 'error' ? '#ff3333' : (type === 'success' ? '#33ff33' : '#ffffff');
+            debugLogs.innerHTML += `<div style="color: ${color}; margin-bottom: 4px;">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            debugLogs.scrollTop = debugLogs.scrollHeight;
+        }
+
+        window.onerror = function(msg, url, line) {
+            logDebug(`ERR: ${msg} (${line})`, 'error');
+        };
+
+        // ----------------------------------------------------
+        // SVG BACKGROUND WINDING WIRE CABLE GENERATOR
+        // ----------------------------------------------------
+        function updateWirePath() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            // Total page: 2 intro + 2 mediator + 1.5 micro + 2.5 drumstick + 2 team + 1 contacts = 10 sections (1000vh)
+            const d = `
+                M ${w * 0.8} ${h * 0.2}
+                C ${w * 0.6} ${h * 0.4},  ${w * 0.25} ${h * 0.65},  ${w * 0.3}  ${h * 0.95}
+                C ${w * 0.35} ${h * 1.2}, ${w * 0.8}  ${h * 1.3},   ${w * 0.75} ${h * 1.8}
+                C ${w * 0.7} ${h * 2.1},  ${w * 0.3}  ${h * 2.35},  ${w * 0.25} ${h * 2.75}
+                C ${w * 0.2} ${h * 3.15}, ${w * 0.85} ${h * 3.25},  ${w * 0.75} ${h * 3.55}
+                C ${w * 0.65} ${h * 3.9}, ${w * 0.25} ${h * 4.15},  ${w * 0.35} ${h * 4.5}
+                C ${w * 0.45} ${h * 4.9}, ${w * 0.55} ${h * 5.05},  ${w * 0.5}  ${h * 5.3}
+                C ${w * 0.4} ${h * 5.7},  ${w * 0.2}  ${h * 5.9},   ${w * 0.5}  ${h * 6.25}
+                C ${w * 0.8} ${h * 6.6},  ${w * 0.35} ${h * 6.9},   ${w * 0.3}  ${h * 7.3}
+                C ${w * 0.25} ${h * 7.7}, ${w * 0.75} ${h * 7.9},   ${w * 0.5}  ${h * 8.3}
+                C ${w * 0.25} ${h * 8.7}, ${w * 0.75} ${h * 9.1},   ${w * 0.5}  ${h * 9.65}
+            `;
+            document.getElementById('wire-path-base').setAttribute('d', d);
+            document.getElementById('wire-path-glow').setAttribute('d', d);
+            document.getElementById('wire-path-pulse').setAttribute('d', d);
+        }
+
+        window.addEventListener('resize', updateWirePath);
+        updateWirePath();
+
+        // ----------------------------------------------------
+        // DYNAMIC GUITAR-TO-MICROPHONE CABLE TRACKING
+        // ----------------------------------------------------
+        function updateGuitarCable() {
+            const outlet = document.getElementById('guitar-cable-outlet');
+            const micEntry = document.getElementById('mic-cable-entry');
+            
+            if (!outlet || !micEntry) return;
+            
+            const outletRect = outlet.getBoundingClientRect();
+            const micRect = micEntry.getBoundingClientRect();
+            
+            // If the elements are display:none or not yet sized, skip
+            if (outletRect.width === 0 || micRect.width === 0) return;
+            
+            const startX = outletRect.left + outletRect.width / 2 + window.scrollX;
+            const startY = outletRect.top + outletRect.height / 2 + window.scrollY;
+            
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            
+            // Natural page coordinates for the cable end (when microphone is invisible / scroll is at Slide 1 or 2)
+            // It should wind down and end far below the screen, not bend back to the center of the viewport.
+            const naturalEndX = w * 0.5;
+            const naturalEndY = h * 7.2; // 720vh (near bottom of Slide 3, way off-screen for Slide 1 & 2)
+            
+            // Actual microphone base coordinates in page-space
+            const micX = micRect.left + micRect.width / 2 + window.scrollX;
+            const micY = micRect.top + micRect.height / 2 + window.scrollY;
+            
+            // Get the current opacity of the microphone wrapper ( GSAP controls this from 0 to 1 )
+            const micWrapper = document.getElementById('overlay-microphone-wrapper');
+            const opacity = micWrapper ? parseFloat(window.getComputedStyle(micWrapper).opacity) : 0;
+            
+            // Smoothly interpolate between the natural off-screen position and the active microphone position
+            const endX = naturalEndX + (micX - naturalEndX) * opacity;
+            const endY = naturalEndY + (micY - naturalEndY) * opacity;
+            
+            // Generate a beautiful, winding serpentine path from guitar (top right) to mic (Slide 3)
+            const d = `
+                M ${startX} ${startY}
+                C ${startX - 180} ${startY + 120}, ${w * 0.85} ${h * 0.75}, ${w * 0.65} ${h * 0.95}
+                C ${w * 0.4} ${h * 1.2}, ${w * 0.15} ${h * 1.45}, ${w * 0.25} ${h * 1.8}
+                C ${w * 0.4} ${h * 2.2}, ${w * 0.85} ${h * 2.45}, ${w * 0.75} ${h * 2.9}
+                C ${w * 0.65} ${h * 3.4}, ${w * 0.15} ${h * 3.75}, ${w * 0.25} ${h * 4.2}
+                C ${w * 0.35} ${h * 4.7}, ${w * 0.85} ${h * 5.05}, ${w * 0.7} ${h * 5.5}
+                C ${w * 0.55} ${h * 6.0}, ${w * 0.2} ${h * 6.35}, ${w * 0.35} ${h * 6.75}
+                C ${w * 0.45} ${h * 7.05}, ${endX - 80} ${endY + 120}, ${endX} ${endY}
+            `;
+            
+            const aura = document.getElementById('guitar-cable-aura');
+            const outer = document.getElementById('guitar-cable-outer');
+            const inner = document.getElementById('guitar-cable-inner');
+            const pulse = document.getElementById('guitar-cable-pulse');
+            
+            if (aura) aura.setAttribute('d', d);
+            if (outer) outer.setAttribute('d', d);
+            if (inner) inner.setAttribute('d', d);
+            if (pulse) pulse.setAttribute('d', d);
+        }
+
+        window.addEventListener('resize', updateGuitarCable);
+        window.addEventListener('scroll', updateGuitarCable);
+        
+        // Use GSAP ticker to update every frame, making it follow the floating guitar & swinging mic perfectly!
+        gsap.ticker.add(updateGuitarCable);
+
+        // Register ScrollTrigger plugin
+        gsap.registerPlugin(ScrollTrigger);
+
+        const heroIntroTl = gsap.timeline({
+            defaults: {
+                ease: 'power3.out'
+            }
+        });
+
+        heroIntroTl
+            .from('.hero-kicker-chip', { opacity: 0, y: 22, duration: 0.55 })
+            .from('.hero-title', { opacity: 0, y: 36, duration: 0.85 }, 0.08)
+            .from('.hero-copy .slide-description', { opacity: 0, y: 20, duration: 0.55 }, 0.18)
+            .from('.hero-lead', { opacity: 0, y: 26, duration: 0.7 }, 0.28)
+            .from('.hero-meta span', { opacity: 0, y: 18, stagger: 0.1, duration: 0.45 }, 0.42)
+            .from('.hero-guitar-asset', { opacity: 0, x: 90, y: 50, rotate: -28, duration: 1.15 }, 0.16)
+            .from('.hero-floor-copy', { opacity: 0, y: 20, duration: 0.5 }, 0.82)
+            .from('.scroll-indicator', { opacity: 0, y: 18, duration: 0.45 }, 0.96);
+
+        gsap.to('.hero-artboard', {
+            yPercent: 10,
+            ease: 'none',
+            scrollTrigger: {
+                trigger: '#hero',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 1.2
+            }
+        });
+
+        gsap.to('.hero-copy', {
+            yPercent: -8,
+            opacity: 0.76,
+            ease: 'none',
+            scrollTrigger: {
+                trigger: '#hero',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 1.2
+            }
+        });
+
+        // ----------------------------------------------------
+        // THREE.JS 3D MEDIATOR SETUP
+        // ----------------------------------------------------
+        const canvas = document.getElementById('webgl-canvas');
+        const container = document.getElementById('canvas-container');
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = 6;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+
+        // Lighting (Balanced to prevent overexposure while maintaining 3D highlights)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 8, 5);
+        scene.add(dirLight);
+
+        // Highlight edges on the left/bottom to pop the 3D depth
+        const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+        dirLight2.position.set(-6, -4, 4);
+        scene.add(dirLight2);
+
+        const pointLight = new THREE.PointLight(0x9d4edd, 1.5, 12);
+        pointLight.position.set(0, 0, 3);
+        scene.add(pointLight);
+
+        // Color/Texture generators
+        function createCarbonCanvasTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw background carbon look
+            ctx.fillStyle = '#111113';
+            ctx.fillRect(0, 0, 256, 256);
+            
+            ctx.fillStyle = '#060608';
+            for (let y = 0; y < 256; y += 8) {
+                for (let x = 0; x < 256; x += 16) {
+                    ctx.fillRect(x + (y % 16 === 0 ? 0 : 8), y, 8, 4);
+                }
+            }
+            
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(4, 4);
+            return tex;
+        }
+
+        function createGoldBackTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+            
+            // Gold radial gradient
+            const grad = ctx.createRadialGradient(512, 512, 100, 512, 512, 600);
+            grad.addColorStop(0, '#ffd700');
+            grad.addColorStop(0.5, '#c59b27');
+            grad.addColorStop(1, '#664e10');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 1024, 1024);
+            
+            // Scratches/grain
+            ctx.fillStyle = 'rgba(255,255,255,0.06)';
+            for (let i = 0; i < 400; i++) {
+                ctx.fillRect(Math.random()*1024, Math.random()*1024, Math.random()*200+50, 1);
+            }
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            for (let i = 0; i < 400; i++) {
+                ctx.fillRect(Math.random()*1024, Math.random()*1024, Math.random()*200+50, 1);
+            }
+            
+            // Draw logo engraving
+            ctx.font = 'bold 74px "Outfit", "Inter", sans-serif';
+            ctx.fillStyle = '#08080a';
+            ctx.textAlign = 'center';
+            ctx.fillText('GRAND', 512, 420);
+            ctx.fillText('BOOKING', 512, 510);
+            
+            ctx.font = '700 32px "Inter", sans-serif';
+            ctx.fillStyle = 'rgba(8, 8, 10, 0.6)';
+            ctx.fillText('CONCERT AGENCY', 512, 590);
+            
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const artistTextureProfiles = {
+            default: { zoom: 1.06, focusX: 0.5, focusY: 0.34, topInset: 172, bottomInset: 42 },
+            uli:     { zoom: 1.1,  focusX: 0.55, focusY: 0.36, topInset: 178, bottomInset: 46 },
+            joe:     { zoom: 1.14, focusX: 0.5, focusY: 0.27, topInset: 184, bottomInset: 52 },
+            rockets: { zoom: 1.15, focusX: 0.5, focusY: 0.44, topInset: 166, bottomInset: 34 }
+        };
+
+        function getArtistTextureProfile(name) {
+            const lowerName = (name || '').toLowerCase();
+            if (lowerName.includes('uli')) return artistTextureProfiles.uli;
+            if (lowerName.includes('joe')) return artistTextureProfiles.joe;
+            if (lowerName.includes('rocket')) return artistTextureProfiles.rockets;
+            return artistTextureProfiles.default;
+        }
+
+        function traceTaperedPhotoPanel(ctx, panel) {
+            const { x, y, w, h } = panel;
+            const px = (u) => x + w * u;
+            const py = (v) => y + h * v;
+
+            ctx.beginPath();
+            ctx.moveTo(px(0.5), py(1));
+            ctx.bezierCurveTo(px(0.1765), py(1), px(0), py(0.9111), px(0), py(0.7111));
+            ctx.bezierCurveTo(px(0.0294), py(0.5333), px(0.2647), py(0.1333), px(0.5), py(0));
+            ctx.bezierCurveTo(px(0.7353), py(0.1333), px(0.9706), py(0.5333), px(1), py(0.7111));
+            ctx.bezierCurveTo(px(1), py(0.9111), px(0.8235), py(1), px(0.5), py(1));
+            ctx.closePath();
+        }
+
+        // Draw Artist Image and Text Tag on Canvas Texture
+        // Photo is smaller with premium decorative frame edges (corner ornaments + double border)
+        function createArtistTexture(img, name) {
+            const W = 1024, H = 1024;
+            const cv = document.createElement('canvas');
+            cv.width = W; cv.height = H;
+            const ctx = cv.getContext('2d');
+            const profile = getArtistTextureProfile(name);
+
+            // Background: dark celluloid rim colour
+            ctx.fillStyle = '#0e0e12';
+            ctx.fillRect(0, 0, W, H);
+
+            // Subtle background texture pattern
+            ctx.fillStyle = 'rgba(255,255,255,0.015)';
+            for (let i = 0; i < W; i += 24) {
+                ctx.fillRect(i, 0, 1, H);
+            }
+            for (let i = 0; i < H; i += 24) {
+                ctx.fillRect(0, i, W, 1);
+            }
+
+            // Photo zone — shifted DOWN so photo never clips at pick tip
+            // Pick is sharp at top, wide at bottom. Photo starts LOWER where pick is wide.
+            const bSide   = 210;  // left / right border
+            const bTop    = 290;  // top border — large, photo starts well below tip
+            const bBottom = 230;  // bottom zone for artist name
+            const px = bSide, py = bTop;
+            const pw = W - bSide * 2;
+            const ph = H - bTop - bBottom;
+            const panel = {
+                x: 154,
+                y: 106,
+                w: W - 308,
+                h: 642,
+                topInset: profile.topInset,
+                bottomInset: profile.bottomInset
+            };
+            const separatorY = panel.y + panel.h + 26;
+            const textBaseY = panel.y + panel.h + 96;
+
+            if (img) {
+                // Clip to photo region with rounded corners
+                ctx.save();
+                traceTaperedPhotoPanel(ctx, panel);
+                ctx.clip();
+
+                // object-fit: cover — crop to centre, no distortion
+                const scale = Math.max(panel.w / img.width, panel.h / img.height) * profile.zoom;
+                const drawW = img.width * scale;
+                const drawH = img.height * scale;
+                const centerX = panel.x + panel.w / 2;
+                const centerY = panel.y + panel.h / 2;
+                const drawX = centerX - drawW * profile.focusX;
+                const drawY = centerY - drawH * profile.focusY;
+                ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+                const topShade = ctx.createLinearGradient(0, panel.y - 12, 0, panel.y + panel.h);
+                topShade.addColorStop(0, 'rgba(7, 7, 10, 0.36)');
+                topShade.addColorStop(0.24, 'rgba(7, 7, 10, 0.08)');
+                topShade.addColorStop(1, 'rgba(7, 7, 10, 0.2)');
+                ctx.fillStyle = topShade;
+                ctx.fillRect(panel.x - 40, panel.y - 30, panel.w + 80, panel.h + 60);
+
+                const bottomFade = ctx.createLinearGradient(0, panel.y + panel.h - 120, 0, panel.y + panel.h + 30);
+                bottomFade.addColorStop(0, 'rgba(14, 14, 18, 0)');
+                bottomFade.addColorStop(1, 'rgba(14, 14, 18, 0.82)');
+                ctx.fillStyle = bottomFade;
+                ctx.fillRect(panel.x - 30, panel.y + panel.h - 120, panel.w + 60, 160);
+
+                const sideVignette = ctx.createRadialGradient(W / 2, panel.y + panel.h * 0.5, panel.w * 0.25, W / 2, panel.y + panel.h * 0.55, panel.w * 0.76);
+                sideVignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                sideVignette.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+                ctx.fillStyle = sideVignette;
+                ctx.fillRect(panel.x - 40, panel.y - 20, panel.w + 80, panel.h + 40);
+
+                ctx.restore();
+            }
+
+            ctx.save();
+            traceTaperedPhotoPanel(ctx, panel);
+            ctx.strokeStyle = 'rgba(255, 200, 80, 0.62)';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            const outerPanel = {
+                ...panel,
+                x: panel.x - 14,
+                y: panel.y - 14,
+                w: panel.w + 28,
+                h: panel.h + 28,
+                topInset: Math.max(94, panel.topInset - 14),
+                bottomInset: Math.max(12, panel.bottomInset - 12)
+            };
+
+            traceTaperedPhotoPanel(ctx, outerPanel);
+            ctx.strokeStyle = 'rgba(157, 78, 221, 0.33)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+
+            // === PREMIUM DECORATIVE FRAME ===
+            // Outer double border
+            ctx.strokeStyle = 'rgba(255, 200, 80, 0.08)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px - 8, py - 8, pw + 16, ph + 16);
+
+            ctx.strokeStyle = 'rgba(157, 78, 221, 0.06)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px - 16, py - 16, pw + 32, ph + 32);
+
+            // Corner ornaments — L-shaped gold brackets at each corner
+            const cLen = 38; // length of each bracket arm
+            const cOff = -20; // outer offset
+            ctx.strokeStyle = 'rgba(255, 200, 80, 0.08)';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            const corners = [
+                [px + cOff, py + cOff, 1, 1],
+                [px + pw - cOff, py + cOff, -1, 1],
+                [px + cOff, py + ph - cOff, 1, -1],
+                [px + pw - cOff, py + ph - cOff, -1, -1]
+            ];
+            corners.forEach(([cx, cy, dx, dy]) => {
+                ctx.beginPath();
+                ctx.moveTo(cx + dx * cLen, cy);
+                ctx.lineTo(cx, cy);
+                ctx.lineTo(cx, cy + dy * cLen);
+                ctx.stroke();
+                // Small dot at corner
+                ctx.fillStyle = 'rgba(255, 200, 80, 0.08)';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Mid-side tick marks on frame
+            ctx.strokeStyle = 'rgba(255, 200, 80, 0.5)';
+            ctx.lineWidth = 2;
+            const mLen = 18;
+            // top mid
+            ctx.beginPath(); ctx.moveTo(W / 2 - mLen/2, panel.y - 8); ctx.lineTo(W / 2 + mLen/2, panel.y - 8); ctx.stroke();
+            // bottom mid
+            ctx.beginPath(); ctx.moveTo(W / 2 - mLen/2, panel.y + panel.h + 8); ctx.lineTo(W / 2 + mLen/2, panel.y + panel.h + 8); ctx.stroke();
+            // left mid
+            ctx.beginPath(); ctx.moveTo(panel.x + 36, panel.y + panel.h/2 - mLen/2); ctx.lineTo(panel.x + 36, panel.y + panel.h/2 + mLen/2); ctx.stroke();
+            // right mid
+            ctx.beginPath(); ctx.moveTo(panel.x + panel.w - 36, panel.y + panel.h/2 - mLen/2); ctx.lineTo(panel.x + panel.w - 36, panel.y + panel.h/2 + mLen/2); ctx.stroke();
+
+            // Separator between photo and text zone
+            const sepY = separatorY;
+            ctx.strokeStyle = 'rgba(255, 200, 80, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(220, sepY);
+            ctx.lineTo(W - 220, sepY);
+            ctx.stroke();
+            // Diamond in the middle of separator
+            ctx.fillStyle = 'rgba(255, 200, 80, 0.75)';
+            ctx.beginPath();
+            ctx.moveTo(W/2, sepY - 5);
+            ctx.lineTo(W/2 + 5, sepY);
+            ctx.lineTo(W/2, sepY + 5);
+            ctx.lineTo(W/2 - 5, sepY);
+            ctx.closePath();
+            ctx.fill();
+
+            if (name) {
+                ctx.textAlign = 'center';
+                // Artist name — positioned in the bottom zone below photo
+                ctx.font = `bold ${name.length > 14 ? 50 : 58}px "Outfit", "Inter", sans-serif`;
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+                ctx.shadowBlur = 16;
+                ctx.fillText(name.toUpperCase(), W / 2, textBaseY);
+                // Subtitle in accent gold
+                ctx.font = '500 24px "Inter", sans-serif';
+                ctx.fillStyle = 'rgba(255, 158, 0, 0.85)';
+                ctx.shadowBlur = 0;
+                ctx.fillText('GRAND BOOKING ARTIST', W / 2, textBaseY + 40);
+            }
+
+            return new THREE.CanvasTexture(cv);
+        }
+
+        // Build elegant classic guitar pick shape (Fender 351 profile)
+        // SHARP END UP: sharp tip at y=+1.15 (top), blunt rounded base at y=-1.1 (bottom)
+        // The wide base gives more texture space for the artist name text
+        const pickShape = new THREE.Shape();
+        pickShape.moveTo(0, -1.1);
+        // Bottom-left curve (blunt base)
+        pickShape.bezierCurveTo(-0.55, -1.1, -0.85, -0.9, -0.85, -0.45);
+        // Tapering up to the sharp pointed tip
+        pickShape.bezierCurveTo(-0.8, -0.05, -0.4, 0.85, 0, 1.15);
+        // Tapering back down to bottom-right shoulder
+        pickShape.bezierCurveTo(0.4, 0.85, 0.8, -0.05, 0.85, -0.45);
+        // Bottom-right curve back to start
+        pickShape.bezierCurveTo(0.85, -0.9, 0.55, -1.1, 0, -1.1);
+
+        // Helper to normalize UV mapping for Extrude/Shape geometries to prevent texture offset issues
+        function normalizeUVs(geometry) {
+            geometry.computeBoundingBox();
+            const bbox = geometry.boundingBox;
+            const sizeX = bbox.max.x - bbox.min.x;
+            const sizeY = bbox.max.y - bbox.min.y;
+
+            const positionAttribute = geometry.attributes.position;
+            const uvAttribute = geometry.attributes.uv;
+            if (!positionAttribute || !uvAttribute) return;
+
+            for (let i = 0; i < positionAttribute.count; i++) {
+                const x = positionAttribute.getX(i);
+                const y = positionAttribute.getY(i);
+                const u = (x - bbox.min.x) / sizeX;
+                const v = (y - bbox.min.y) / sizeY;
+                uvAttribute.setXY(i, u, v);
+            }
+
+            uvAttribute.needsUpdate = true;
+        }
+
+        // Group to hold all parts of the pick
+        const pickGroup = new THREE.Group();
+        scene.add(pickGroup);
+
+        // Front Face mesh - Using MeshBasicMaterial to prevent overexposure and render photos in high-fidelity
+        const frontGeom = new THREE.ShapeGeometry(pickShape);
+        normalizeUVs(frontGeom);
+        const frontMat = new THREE.MeshBasicMaterial({
+            side: THREE.DoubleSide
+        });
+        const frontMesh = new THREE.Mesh(frontGeom, frontMat);
+        frontMesh.scale.set(0.95, 0.95, 0.95); // slightly scaled down to fit inside the rim bezel
+        frontMesh.position.z = 0.037; // sitting flush on the edge flat cap (0.03 + 0.006 bevel + offset)
+        pickGroup.add(frontMesh);
+
+        // Back Face mesh - Using gold engraving styling with clearcoat
+        const backGeom = new THREE.ShapeGeometry(pickShape);
+        normalizeUVs(backGeom);
+        const backMat = new THREE.MeshPhysicalMaterial({
+            map: createGoldBackTexture(),
+            roughness: 0.12,
+            metalness: 0.8,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.05,
+            side: THREE.DoubleSide
+        });
+        const backMesh = new THREE.Mesh(backGeom, backMat);
+        backMesh.scale.set(0.95, 0.95, 0.95); // slightly scaled down to fit inside the rim bezel
+        backMesh.rotation.y = Math.PI; // Face backwards
+        backMesh.position.z = -0.037; // sitting flush on the edge flat cap
+        pickGroup.add(backMesh);
+
+        // Rim border (sandwiches the pick caps, thin profile like real pick)
+        const rimGeom = new THREE.ExtrudeGeometry(pickShape, {
+            depth: 0.06,
+            bevelEnabled: true,
+            bevelThickness: 0.006, // thin bevel, very sharp and premium look
+            bevelSize: 0.006,
+            bevelSegments: 4
+        });
+        rimGeom.center();
+        const rimMat = new THREE.MeshPhysicalMaterial({
+            color: 0x111113, // matching carbon black glossy molded celluloid edge
+            roughness: 0.15,
+            metalness: 0.2,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.05
+        });
+        const rimMesh = new THREE.Mesh(rimGeom, rimMat);
+        pickGroup.add(rimMesh);
+
+        // Pick starts at scale 0 so it's invisible before the showcase.
+        // GSAP fromTo in phase 0 will properly reverse back to 0 when scrolling up.
+        pickGroup.scale.set(0, 0, 0);
+        pickGroup.position.set(0, 0, -4);
+
+        // Preload Image textures
+        const textureMap = {
+            bare: createCarbonCanvasTexture(),
+            uli: null,
+            joe: null,
+            rockets: null
+        };
+        frontMesh.material.map = textureMap.bare;
+
+        // Native Image preloader
+        const loadedCount = 0;
+        const artistsToLoad = [
+            { key: 'uli', url: 'artists/UliJonRoth.jpeg', name: 'Uli Jon Roth' },
+            { key: 'joe', url: 'artists/JLTurner.jpg', name: 'Joe Lynn Turner' },
+            { key: 'rockets', url: 'artists/Rockets.jpg', name: 'Rockets' }
+        ];
+
+        logDebug("Preloading artist textures natively...");
+        
+        artistsToLoad.forEach(art => {
+            const img = new Image();
+            if (window.location.protocol !== 'file:') {
+                img.crossOrigin = "anonymous"; // Keep canvas-safe image loading for http/https mode
+            }
+            img.onload = function() {
+                logDebug(`SUCCESS: Native loaded ${art.name} (${img.width}x${img.height})`, 'success');
+                try {
+                    const canvasTexture = createArtistTexture(img, art.name);
+                    canvasTexture.needsUpdate = true;
+                    textureMap[art.key] = canvasTexture;
+                    logDebug(`SUCCESS: Applied canvas texture for ${art.name}`, 'success');
+                } catch(e) {
+                    logDebug(`CATCH ERROR for ${art.name}: ${e.message}`, 'error');
+                }
+            };
+            img.onerror = function() {
+                logDebug(`ERROR: Failed loading image for ${art.name} from ${art.url}`, 'error');
+                textureMap[art.key] = createArtistTexture(null, art.name); // fallback name tag
+            };
+            img.src = art.url;
+        });
+
+        // ----------------------------------------------------
+        // GSAP SCROLLTRIGGER — scrub-driven mediator journey
+        // Trigger: #mediator-showcase (400vh) — pick animates ONLY in this empty section
+        // Phases: appear (Uli) → RIGHT (Joe) → LEFT (Rockets) → fly away
+        // ----------------------------------------------------
+        const MAX_SCALE = window.innerWidth < 968 ? 1.25 : 1.7;
+        const isMobile  = window.innerWidth < 968;
+
+        // Pre-apply Uli texture immediately (avoids bare-carbon face on first scroll)
+        // It will be overwritten by the real loaded texture once the image loads
+        frontMesh.material.map = createArtistTexture(null, 'Uli Jon Roth');
+        frontMesh.material.needsUpdate = true;
+
+        const scrollTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: '#mediator-showcase',
+                start: 'top top',
+                end: 'bottom bottom',
+                scrub: 3.5,   // smooth but responsive — no "flying into void" lag
+            }
+        });
+
+        // Phase 0→1 (0–25%): emerge from distance, show Uli, swing LEFT
+        scrollTl
+            .fromTo(pickGroup.position,
+                { x: 0,  y: 0, z: -4 },
+                { x: isMobile ? 0 : -2.0, y: 0.0, z: 0.5, duration: 1 }, 0)
+            .fromTo(pickGroup.scale,
+                { x: 0, y: 0, z: 0 },
+                { x: MAX_SCALE, y: MAX_SCALE, z: MAX_SCALE, duration: 1 }, 0)
+            .fromTo(pickGroup.rotation,
+                { y: 0, x: 0, z: 0 },
+                { y: Math.PI * 2, x: 0.1, z: 0.04, duration: 1 }, 0);
+
+        // Phase 1→2 (25–50%): swing RIGHT, Joe Lynn Turner revealed
+        scrollTl
+            .to(pickGroup.position, { x: isMobile ? 0 :  2.0, y: -0.2, z: 0.5, duration: 1 }, 1)
+            .to(pickGroup.scale,    { x: MAX_SCALE, y: MAX_SCALE, z: MAX_SCALE, duration: 1 }, 1)
+            .to(pickGroup.rotation, { y: Math.PI * 4, x: -0.1, z: -0.04, duration: 1 }, 1);
+
+        // Phase 2→3 (50–75%): swing LEFT, Rockets revealed
+        scrollTl
+            .to(pickGroup.position, { x: isMobile ? 0 : -2.0, y: 0.2,  z: 0.5, duration: 1 }, 2)
+            .to(pickGroup.scale,    { x: MAX_SCALE, y: MAX_SCALE, z: MAX_SCALE, duration: 1 }, 2)
+            .to(pickGroup.rotation, { y: Math.PI * 6, x: 0.1,  z: 0.04, duration: 1 }, 2);
+
+        // Phase 3→4 (75–100%): spin out and vanish into distance
+        scrollTl
+            .to(pickGroup.position, { x: isMobile ? 0 : 2.35, y: -1.15, z: -1.1, duration: 1 }, 3)
+            .to(pickGroup.scale,    { x: 0.08, y: 0.08, z: 0.08, duration: 1 }, 3)
+            .to(pickGroup.rotation, { y: Math.PI * 8.35, x: 0.65, z: -0.3, duration: 1 }, 3);
+
+        // ----------------------------------------------------
+        // MICROPHONE SCROLL TRIGGER
+        // ----------------------------------------------------
+        const MIC_ENTRY_X = isMobile ? 0 : 280;
+        const MIC_ENTRY_Y = isMobile ? 120 : 180;
+        const MIC_SWING_X = isMobile ? 0 : -95;
+        const MIC_SWING_Y = isMobile ? -10 : -34;
+        const MIC_EXIT_X = isMobile ? 0 : -190;
+        const MIC_EXIT_Y = isMobile ? -120 : -90;
+
+        const micTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: '#microphone-showcase',
+                start: 'top 92%',
+                end: 'bottom top',
+                scrub: 1.7,
+            }
+        });
+
+        micTl
+            // Entry
+            .to(pickGroup.position, { x: isMobile ? 0 : 3.1, y: -1.9, z: -2.3, duration: 0.85 }, 0)
+            .to(pickGroup.scale,    { x: 0.0, y: 0.0, z: 0.0, duration: 0.85 }, 0)
+            .to(pickGroup.rotation, { y: Math.PI * 8.8, x: 0.9, z: -0.45, duration: 0.85 }, 0)
+            .to('#overlay-microphone-wrapper', { opacity: 1, duration: 0.55 }, 0.08)
+            .fromTo('#overlay-microphone', 
+                { opacity: 0, scale: 0.16, rotation: 128, x: MIC_ENTRY_X, y: MIC_ENTRY_Y },
+                { opacity: 1, scale: 0.98, rotation: 34, x: isMobile ? 0 : 36, y: 12, duration: 1.15, ease: 'power2.out' }, 0.05)
+            .to('#overlay-microphone',
+                { scale: 1.08, rotation: -14, x: MIC_SWING_X, y: MIC_SWING_Y, duration: 1.05, ease: 'power1.inOut' }, 1.1)
+            .fromTo('#microphone-label', { opacity: 0, y: 26, x: 18 }, { opacity: 1, y: 0, x: 0, duration: 0.75 }, 0.55)
+            
+            // Exit
+            .to('#overlay-microphone-wrapper', { opacity: 0, duration: 0.95 }, 2.5)
+            .to('#overlay-microphone', { opacity: 0, scale: 0.72, x: MIC_EXIT_X, y: MIC_EXIT_Y, rotation: -28, duration: 0.95, ease: 'power2.in' }, 2.35)
+            .to('#microphone-label', { opacity: 0, y: -18, x: 22, duration: 0.6 }, 2.15);
+
+        // ----------------------------------------------------
+        // DRUMSTICK SCROLL TRIGGER
+        // Pivot at right-center of viewport. Rotates counter-clockwise.
+        // ----------------------------------------------------
+
+        // ---------------------------------------------------------------
+        // positionStickLabel: place label ABOVE the stick shaft at a given angle.
+        // Uses targetX (viewport px) to find the along-shaft position.
+        // Call ONCE per label at the correct angle to set position permanently.
+        // No callbacks needed — labels stay where placed, only opacity animates.
+        // ---------------------------------------------------------------
+        function positionStickLabel(id, angleDeg, targetX) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const angleRad = angleDeg * Math.PI / 180;
+            const stickW = window.innerWidth * 0.80;               // 80vw
+            const pivotX = window.innerWidth;                       // pivot at right edge
+            // top:50% + half of SVG element height (SVG aspect ≈ 120/700 = 0.171)
+            const pivotY = window.innerHeight * 0.5 + stickW * 0.171 * 0.5;
+
+            // Find t (distance along shaft from pivot) such that cx = targetX:
+            //   cx = pivotX - t * cos(angleDeg)
+            const cosA = Math.cos(angleRad);
+            const sinA = Math.sin(angleRad);
+            let t = Math.abs(cosA) > 0.04 ? (pivotX - targetX) / cosA : stickW * 0.55;
+            t = Math.max(stickW * 0.20, Math.min(stickW * 0.94, t));
+
+            // Point on shaft axis
+            // At CW rotation θ, tip direction: (-cosθ, -sinθ) in screen coords
+            const cx = pivotX - t * cosA;
+            const cy = pivotY - t * sinA;
+
+            // Perpendicular "above" direction (90° CCW from tip dir (-cosθ,-sinθ)):
+            //   = (sinθ, -cosθ)  → always points away from stick on the upper side
+            const aboveOffset = 130; // px above shaft — higher for better readability
+            const px = cx + sinA * aboveOffset;
+            const py = cy - cosA * aboveOffset;
+
+            el.style.left      = px + 'px';
+            el.style.top       = py + 'px';
+            el.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
+        }
+
+        // =============================================================
+        // PRE-POSITION both labels at the exact angles they will appear:
+        //   label-10 appears when stick is at 10°  (tip upper-left)
+        //   label-8  appears when stick is at -7°  (tip lower-left)
+        // Labels placed at x ≈ 62% of viewport width = MIDDLE of the stick visually
+        // (stick spans from right edge ~100% to tip at ~25%, midpoint ≈ 62%)
+        // =============================================================
+        const LABEL_X = window.innerWidth * 0.62;  // ~1190px on 1920 — mid shaft
+        positionStickLabel('drumstick-label-10', 10, LABEL_X);
+        positionStickLabel('drumstick-label-8',  -7, LABEL_X);
+
+        // scrub: 1.8 for smooth feel
+        const stickTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: '#drumstick-showcase',
+                start: 'top 15%',
+                end: 'bottom top',
+                scrub: 1.8,
+            }
+        });
+
+        stickTl
+            .set('#overlay-drumstick', { rotation: 35 }, 0)
+            .to('#overlay-drumstick-wrapper', { opacity: 1, duration: 0.5, ease: 'power2.out' }, 0)
+            // Sweep from 35° to 20° as entry
+            .to('#overlay-drumstick', { rotation: 20, duration: 1.0, ease: 'power2.out' }, 0)
+
+            // Settle to 10°, then show label-10 (ABOVE stick, left portion of screen)
+            .to('#overlay-drumstick', { rotation: 10, duration: 0.8, ease: 'power1.inOut' }, 1.0)
+            .fromTo('#drumstick-label-10', { opacity: 0 }, { opacity: 1, duration: 0.4 }, 1.8)
+            .to('#drumstick-label-10',     { opacity: 0, duration: 0.35 }, 2.9)
+
+            // Rotate to -7°, show label-8 (ABOVE stick, same horizontal zone)
+            .to('#overlay-drumstick', { rotation: -7, duration: 1.0, ease: 'power1.inOut' }, 2.9)
+            .fromTo('#drumstick-label-8', { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3.9)
+            .to('#drumstick-label-8',     { opacity: 0, duration: 0.35 }, 5.0)
+
+            // Final sweep toward drum
+            .to('#overlay-drumstick', { rotation: -20, duration: 1.0, ease: 'power2.inOut' }, 5.0);
+
+        // ----------------------------------------------------
+        // TEAM AND DRUM HIT SCROLL TRIGGER
+        // The strike is visible: stick swings INTO drum head from above and hits it on screen
+        // ----------------------------------------------------
+        const teamTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: '#team',
+                start: 'top bottom',
+                end: 'center center',
+                scrub: 1.0,
+            }
+        });
+
+        // 1. Reveal the vector drum
+        teamTl
+            .to('#team-drum-svg', { opacity: 0.9, duration: 1.5 }, 0)
+            .to('#team-title', { opacity: 1, y: 0, duration: 1.0 }, 0.5);
+
+        // 2. Drum strike.
+        // With 80vw stick (~1536px) and 1200px drum (radius 596px, center ~960,472):
+        // At rotation=-6°, y=60: tip lands at ~(462, 756) — within drum radius. Visible hit.
+        teamTl
+            .to('#overlay-drumstick-wrapper', { opacity: 1, duration: 0.15 }, 0)
+            .to('#overlay-drumstick', {
+                rotation: -6,
+                x: 0,
+                y: isMobile ? 30 : 60,
+                duration: 0.9,
+                ease: 'power2.in'
+            }, 0.4)
+            // Bounce back after hit
+            .to('#overlay-drumstick', {
+                rotation: 0,
+                x: 0,
+                y: isMobile ? 20 : 40,
+                duration: 0.35,
+                ease: 'power2.out',
+                onStart: () => {
+                    const drumSvg = document.getElementById('team-drum-svg');
+                    drumSvg.classList.add('drum-vibrate');
+                    setTimeout(() => drumSvg.classList.remove('drum-vibrate'), 400);
+                    const r1 = document.getElementById('drum-ripple-1');
+                    const r2 = document.getElementById('drum-ripple-2');
+                    r1.classList.add('ripple-active');
+                    setTimeout(() => { r2.classList.add('ripple-active'); }, 200);
+                    setTimeout(() => {
+                        r1.classList.remove('ripple-active');
+                        r2.classList.remove('ripple-active');
+                    }, 1200);
+                }
+            }, 1.3)
+            .to('#overlay-drumstick-wrapper', { opacity: 0, duration: 0.7 }, 1.8)
+            .to('#overlay-drumstick', { y: isMobile ? -60 : -50, rotation: 8, duration: 0.7 }, 1.8);
+
+        // 3. Reveal the team Polaroids upon/after the strike
+        const polaroidCards = document.querySelectorAll('#team-polaroids .polaroid-card');
+        polaroidCards.forEach((card, index) => {
+            const rotations = [-12, -6, 0, 6, 12];
+            const yOffsets = [-15, -38, -50, -38, -15];
+            
+            teamTl.to(card, {
+                opacity: 1,
+                scale: 1.0,
+                rotation: rotations[index],
+                y: yOffsets[index],
+                duration: 1.2,
+                ease: 'back.out(1.7)'
+            }, 1.6 + index * 0.15);
+        });
+
+        // Reveal the slogan
+        teamTl.to('#team-slogan', { opacity: 1, y: 0, duration: 1.2 }, 2.3);
+
+
+
+        // ----------------------------------------------------
+        // TICK / RENDER LOOP
+        // ----------------------------------------------------
+        const clock = new THREE.Clock();
+
+        function tick() {
+            const elapsedTime = clock.getElapsedTime();
+
+            // Orbiting purple point light
+            pointLight.position.x = Math.sin(elapsedTime * 1.5) * 1.5;
+            pointLight.position.y = Math.cos(elapsedTime * 1.5) * 1.5;
+
+            // Alive hover wobble — only while pick is visible and meaningfully sized
+            if (pickGroup.scale.x > 0.15) {
+                // Gentle vertical float (two sine waves at different freqs = organic feel)
+                pickGroup.position.y += (Math.sin(elapsedTime * 1.6) * 0.0035)
+                                      + (Math.sin(elapsedTime * 0.7) * 0.0018);
+                // Subtle tilt sway
+                pickGroup.rotation.z += Math.cos(elapsedTime * 0.9) * 0.0006;
+                pickGroup.rotation.x += Math.sin(elapsedTime * 1.1) * 0.0003;
+            }
+
+            // Angle-based texture swap — Uli from angle 0 (no bare-carbon phase)
+            // Swaps happen mid-spin when the face points away from camera
+            const angle = pickGroup.rotation.y;
+            let currentTex;
+
+            if      (angle < Math.PI * 3.0) { currentTex = textureMap.uli     || textureMap.bare; }
+            else if (angle < Math.PI * 5.0) { currentTex = textureMap.joe     || textureMap.bare; }
+            else                            { currentTex = textureMap.rockets || textureMap.bare; }
+
+            if (frontMesh.material.map !== currentTex && currentTex) {
+                frontMesh.material.map = currentTex;
+                frontMesh.material.map.needsUpdate = true;
+                frontMesh.material.needsUpdate = true;
+            }
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(tick);
+        }
+        tick();
+
+        // ----------------------------------------------------
+        // RESIZE HANDLER
+        // ----------------------------------------------------
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        });
+
+        // Trigger initial resize positioning
+        window.dispatchEvent(new Event('resize'));
+    </script>
+</body>
+</html>
