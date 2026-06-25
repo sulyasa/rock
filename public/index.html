@@ -2048,14 +2048,18 @@
             const micWrapper = document.getElementById('overlay-microphone-wrapper');
             const opacity = micWrapper ? parseFloat(window.getComputedStyle(micWrapper).opacity) : 0;
             
+            // Make the whole cable container fade in/out in sync with the microphone
+            const cableContainer = document.querySelector('.guitar-cable-container');
+            if (cableContainer) cableContainer.style.opacity = String(0.15 + opacity * 0.85);
+            
             // Smoothly interpolate between the natural off-screen position and the active microphone position
             const endX = naturalEndX + (micX - naturalEndX) * opacity;
             const endY = naturalEndY + (micY - naturalEndY) * opacity;
             
-            // Generate a beautiful, winding serpentine path from guitar (top right) to mic (Slide 3)
+            // Generate a beautiful, winding serpentine path — start flows DOWN from guitar, no kink
             const d = `
                 M ${startX} ${startY}
-                C ${startX - 180} ${startY + 120}, ${w * 0.85} ${h * 0.75}, ${w * 0.65} ${h * 0.95}
+                C ${startX} ${startY + 200}, ${w * 0.85} ${h * 0.6}, ${w * 0.65} ${h * 0.95}
                 C ${w * 0.4} ${h * 1.2}, ${w * 0.15} ${h * 1.45}, ${w * 0.25} ${h * 1.8}
                 C ${w * 0.4} ${h * 2.2}, ${w * 0.85} ${h * 2.45}, ${w * 0.75} ${h * 2.9}
                 C ${w * 0.65} ${h * 3.4}, ${w * 0.15} ${h * 3.75}, ${w * 0.25} ${h * 4.2}
@@ -2383,36 +2387,6 @@
                 ctx.fill();
             });
 
-            // Mid-side tick marks on frame
-            ctx.strokeStyle = 'rgba(255, 200, 80, 0.5)';
-            ctx.lineWidth = 2;
-            const mLen = 18;
-            // top mid
-            ctx.beginPath(); ctx.moveTo(W / 2 - mLen/2, panel.y - 8); ctx.lineTo(W / 2 + mLen/2, panel.y - 8); ctx.stroke();
-            // bottom mid
-            ctx.beginPath(); ctx.moveTo(W / 2 - mLen/2, panel.y + panel.h + 8); ctx.lineTo(W / 2 + mLen/2, panel.y + panel.h + 8); ctx.stroke();
-            // left mid
-            ctx.beginPath(); ctx.moveTo(panel.x + 36, panel.y + panel.h/2 - mLen/2); ctx.lineTo(panel.x + 36, panel.y + panel.h/2 + mLen/2); ctx.stroke();
-            // right mid
-            ctx.beginPath(); ctx.moveTo(panel.x + panel.w - 36, panel.y + panel.h/2 - mLen/2); ctx.lineTo(panel.x + panel.w - 36, panel.y + panel.h/2 + mLen/2); ctx.stroke();
-
-            // Separator between photo and text zone
-            const sepY = separatorY;
-            ctx.strokeStyle = 'rgba(255, 200, 80, 0.4)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(220, sepY);
-            ctx.lineTo(W - 220, sepY);
-            ctx.stroke();
-            // Diamond in the middle of separator
-            ctx.fillStyle = 'rgba(255, 200, 80, 0.75)';
-            ctx.beginPath();
-            ctx.moveTo(W/2, sepY - 5);
-            ctx.lineTo(W/2 + 5, sepY);
-            ctx.lineTo(W/2, sepY + 5);
-            ctx.lineTo(W/2 - 5, sepY);
-            ctx.closePath();
-            ctx.fill();
 
             if (name) {
                 ctx.textAlign = 'center';
